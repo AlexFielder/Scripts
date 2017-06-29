@@ -1,0 +1,2 @@
+^k::SendRaw %clipboard%
+return

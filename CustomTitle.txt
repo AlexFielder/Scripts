@@ -1,0 +1,35 @@
+# Use it to write any regular expression to extract document info from title.
+# One line can contain three tab delimited values: 
+# 1. process name on which to run the regex
+# 2. regex for the group. 
+# 3. regex for the activity. OPTIONAL If this one is missing the same value will be used for activity and group.
+#
+#
+# In MaincTime gorups are what you see in the bottom right on the day view, activites on the bottom left. 
+# Lets take an URL for example. Group can be site name, so www.manictime.com, activity could be www.manictime.com/download
+# Most of the plugins in here use the same value for group and activity, so they only have one regex
+#
+# 
+# For example 
+# notepad	[TAB] groupRegex [TAB] activityRegex
+#
+# Lets take notepad as an example. Notepad title usually consists of a document name then hyphen and then Notepad
+# Document1 - Notepad
+#
+# The following line will try to extract document info for notepad, group and activity will be the same
+# notepad	(.*?)-[^-]*$
+#
+# Regex (.*?)-[^-]*$ will get all text before the last hyphen character, so in above example Document1
+#
+# If you include more than one capture group, first non empty one will be used
+#
+#
+#
+# WARNING
+# Whatever you change inside Program files will be overwritten next time you upgrade MT. To keep the changes you make to this file:
+# 1. In ManicTime click on Tools - Advanced - Open db folder.
+# 2. Inside this folder, create folder Plugins. 
+# 3. Copy CustomTitle.txt file in there, then change it there. This file will not be touched when you upgrade and MT first looks in this folder for plugins, before it loads the ones in Program files.
+#
+#
+Inventor	(.+)$

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="1.0">
+<head>
+<title>Subscriptions imported from iGoogle</title>
+</head>
+<body>
+<outline text="Home" title="Home">
+<outline type="rss" title="" text="" xmlUrl="http://through-the-interface.typepad.com/through_the_interface/rss.xml" />
+<outline type="rss" title="" text="" xmlUrl="http://feeds.feedburner.com/InterestingThingOfTheDay" />
+<outline type="rss" title="" text="" xmlUrl="http://www.contextures.com/feed.xml" />
+<outline type="rss" title="" text="" xmlUrl="http://bigbeardy.co.uk/forum/index.php?type=rss;action=.xml" />
+<outline type="rss" title="" text="" xmlUrl="http://rss.slashdot.org/Slashdot/slashdot" />
+<outline type="rss" title="" text="" xmlUrl="http://www.quotationspage.com/data/qotd.rss" />
+<outline type="rss" title="" text="" xmlUrl="http://newsrss.bbc.co.uk/rss/newsonline_world_edition/front_page/rss.xml" />
+<outline type="rss" title="" text="" xmlUrl="http://www.jobsite.co.uk/cgi-bin/advsearch?rss_feed=1&amp;daysback=1&amp;jbe_id=21397250" />
+<outline type="rss" title="" text="" xmlUrl="http://feeds.feedburner.com/Msfn" />
+<outline type="rss" title="" text="" xmlUrl="http://www.theregister.co.uk/excerpts.rss" />
+<outline type="rss" title="" text="" xmlUrl="http://www.the-inquirer.net/inquirer.rss" />
+<outline type="rss" title="" text="" xmlUrl="http://feeds.feedburner.com/futurismic_feed" />
+<outline type="rss" title="" text="" xmlUrl="http://booksearch.blogspot.com/atom.xml" />
+<outline type="rss" title="" text="" xmlUrl="http://feeds.howstuffworks.com/DailyStuff" />
+<outline type="rss" title="" text="" xmlUrl="http://www.wired.com/news/feeds/rss2/0,2610,,00.xml" />
+<outline type="rss" title="" text="" xmlUrl="http://www.nytimes.com/services/xml/rss/nyt/HomePage.xml" />
+<outline type="rss" title="" text="" xmlUrl="http://dictionary.reference.com/wordoftheday/wotd.rss" />
+</outline>
+<outline text="Games and stuff" title="Games and stuff">
+<outline type="rss" title="" text="" xmlUrl="http://howstuffworks.com/feature-article-feed.htm" />
+</outline>
+</body>
+</opml>

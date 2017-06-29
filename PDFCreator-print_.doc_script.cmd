@@ -1,0 +1,1 @@
+forfiles /p "c:\CETDEV" /s /m *.doc* /c "cmd /c pdfcreator.exe /PrintFile=@path"

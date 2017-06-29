@@ -1,0 +1,1 @@
+choco list -lo > "C:\Users\alex.fielder\Dropbox\App config files\Chocolatey (ADR1010AF)\installed-2017-01-30.log"

@@ -1,0 +1,5 @@
+pssuspend dropbox
+pssuspend searchindexer
+pssuspend everything
+pssuspend onedrive
+pssuspend groove

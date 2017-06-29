@@ -1,0 +1,18 @@
+zoom
+e
+;Command:
+-PLOT
+;Detailed plot configuration? [Yes/No] <No>: 
+No
+;Enter a layout name or [?] <Model>:
+Model
+Enter a page setup name <>:
+
+;Enter an output device name or [?] <None>:
+DWF6 eplot.pc3
+;Enter file name <C:\Work\solids-Model.dwf>:
+"<acet:cFolderName>\<acet:cBaseName>.DWF"
+;Save changes to page setup? Or set shade plot quality? [Yes/No/Quality] <N>:
+No
+;Proceed with plot [Yes/No] <Y>:
+Yes

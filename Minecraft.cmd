@@ -1,0 +1,1 @@
+shell:AppsFolder\Microsoft.MinecraftUWP_8wekyb3d8bbwe!App

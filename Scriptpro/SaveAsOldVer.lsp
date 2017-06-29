@@ -1,0 +1,58 @@
+(defun c:saveasR14() 
+(setq Dwgna (getvar "dwgname"))
+(setq Fname (substr Dwgna 1 (- (strlen Dwgna) 4)))
+(setq name (strcat (getvar "DWGPREFIX") Fname "_R14.dwg" ))
+(command "saveas" "R14(LT98&LT97)" name)
+)
+
+(defun c:saveas2000() 
+(setq Dwgna (getvar "dwgname"))
+(setq Fname (substr Dwgna 1 (- (strlen Dwgna) 4)))
+(setq name (strcat (getvar "DWGPREFIX") Fname "_2000.dwg" ))
+(command "saveas" "2000(LT2000)" name)
+)
+
+(defun c:saveas2000Dxf() 
+(setq Dwgna (getvar "dwgname"))
+(setq Fname (substr Dwgna 1 (- (strlen Dwgna) 4)))
+(setq name (strcat (getvar "DWGPREFIX") Fname "_2000.dxf" ))
+(command "saveas" "DXF" "Version" "2000(LT2000)" "16" name)
+)
+
+
+(defun c:saveas2004() 
+(setq Dwgna (getvar "dwgname"))
+(setq Fname (substr Dwgna 1 (- (strlen Dwgna) 4)))
+(setq name (strcat (getvar "DWGPREFIX") Fname "_2004.dwg" ))
+(command "saveas" "2004(LT2004)" name)
+)
+
+(defun c:saveas2004Dxf() 
+(setq Dwgna (getvar "dwgname"))
+(setq Fname (substr Dwgna 1 (- (strlen Dwgna) 4)))
+(setq name (strcat (getvar "DWGPREFIX") Fname "_2004.dxf" ))
+(command "saveas" "DXF" "Version" "2004(LT2004)" "16" name)
+)
+
+
+(defun c:saveas2007() 
+(setq Dwgna (getvar "dwgname"))
+(setq Fname (substr Dwgna 1 (- (strlen Dwgna) 4)))
+(setq name (strcat (getvar "DWGPREFIX") Fname "_2007.dwg" ))
+(command "saveas" "2007(LT2007)" name)
+)
+
+
+(defun c:saveas2007Dxf() 
+(setq Dwgna (getvar "dwgname"))
+(setq Fname (substr Dwgna 1 (- (strlen Dwgna) 4)))
+(setq name (strcat (getvar "DWGPREFIX") Fname "_2007.dxf" ))
+(command "saveas" "DXF" "Version" "2007(LT2007)" "16" name)
+)
+
+(defun c:saveas2010()
+(setq Dwgna (getvar "dwgname"))
+(setq Fname (substr Dwgna 1 (- (strlen Dwgna) 4)))
+(setq name (strcat (getvar "DWGPREFIX") Fname "_2010.dwg" ))
+(command "saveas" "2010(LT2010)" name)
+)

@@ -1,0 +1,4 @@
+(LOAD "c:\\ScriptPro\\Samples\\saveimage.lsp")
+(command "vpoint" "0,0,1")
+(command "zoom" "e")
+saveasImage_PNG

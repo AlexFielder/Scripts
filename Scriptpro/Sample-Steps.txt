@@ -1,0 +1,28 @@
+
+To save a set of drawings in an old format:
+-------------------------------------------
+
+Select "SaveAs2004.scr" as the script to apply for the selected
+drawing files. This script file will load the "SaveAsOldVer.lsp"
+file (make sure you provide the correct path), and runs the
+saveas2004 command which saves the opened file in the 2004 DWG
+format.
+
+
+To capture images of a set of drawing files:
+--------------------------------------------
+
+Download the "Screenshot for AutoCAD" Plugin of the Month from
+Autodesk Labs:
+
+http://labs.autodesk.com/utilities/ADN_plugins/catalog
+
+Follow the instructions provided with this plugin to load it into
+AutoCAD: this will cause the plugin to be loaded automatically
+whenever the SCREENSHOT command is used (which is the case with
+the below script).
+
+Select the "SavePNG.scr" as the script to run for the selected
+drawing files. This will, in turn, load the LISP file which
+implements the saveasImage_PNG command. Make sure you provide the
+correct path.

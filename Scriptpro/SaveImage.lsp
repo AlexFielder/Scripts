@@ -1,0 +1,16 @@
+(defun c:saveasImage_PNG() 
+(command "tilemode" "1")
+(setq Dwgna (getvar "dwgname"))
+(setq Fname (substr Dwgna 1 (- (strlen Dwgna) 4)))
+(setq name (strcat (getvar "DWGPREFIX") Fname ".png" ))
+(command "SCREENSHOT" "Settings" "Output" "File" "Exit" "OBJECTS" "ALL" "" name)
+)
+
+
+(defun c:saveasImage_JPG() 
+(command "tilemode" "1")
+(setq Dwgna (getvar "dwgname"))
+(setq Fname (substr Dwgna 1 (- (strlen Dwgna) 4)))
+(setq name (strcat (getvar "DWGPREFIX") Fname ".jpg" ))
+(command "SCREENSHOT" "Settings" "Output" "File" "Exit" "OBJECTS" "ALL" "" name)
+)
