@@ -1,6 +1,7 @@
 @echo off
 echo updating hound with latest from cetdev\version 8.0
-SET SOURCEPATH=C:\CETDEV\VERSION8.0-RC_DEV\HOME
+@##SET SOURCEPATH=C:\CETDEV\VERSION8.0\HOME
+SET SOURCEPATH=C:\CetDev\version8.0-rc_dev\HOME
 SET DESTPATH=C:\CM\HOME
 robocopy %SOURCEPATH% %DESTPATH% *.RS *.CM /S /PURGE /XO /MT
 cd /d %DESTPATH%
