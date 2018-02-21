@@ -1,11 +1,11 @@
 @echo off
 setlocal enableDelayedExpansion
 echo setting up variables...
-SET VAULTBACKUPPATH=C:\Users\alex.fielder\Dropbox\Graitec\Vault Backup
-SET LOGFILEPATH=C:\Users\alex.fielder\Dropbox\Graitec\GRA0387AF_Vault_Backup.txt
-SET SEVENZIPLOGFILEPATH=C:\Users\alex.fielder\Dropbox\Graitec\GRA0387AF_Zip_Log.txt
+SET VAULTBACKUPPATH=F:\Dropbox\Graitec\Vault Backup
+SET LOGFILEPATH=F:\Dropbox\Graitec\GRA0387AF_Vault_Backup.txt
+SET SEVENZIPLOGFILEPATH=F:\Dropbox\Graitec\GRA0387AF_Zip_Log.txt
 SET SEVENZIPPATH=C:\ProgramData\chocolatey\bin\7za.exe
-SET ADMSCONSOLEPATH=C:\Program Files\Autodesk\ADMS Professional 2017\ADMS Console\Connectivity.ADMSConsole.exe
+SET ADMSCONSOLEPATH=C:\Program Files\Autodesk\ADMS Professional 2018\ADMS Console\Connectivity.ADMSConsole.exe
 SET NUMDAYSBACKUPTOKEEP=-15
 SET MINMEMVALUE=2000000
 SET MINDRIVESPACE=10000000
@@ -20,15 +20,15 @@ REM if !AVAILABLESYSTEMMEMORY! LSS !MINMEMVALUE! (
 REM ) ELSE (
 	REM echo "%DATE% %TIME%: sufficient system memory, continuing" >> %LOGFILEPATH%
 REM )
-echo checking free disk space on C:\
-FOR /F "usebackq tokens=3" %%s IN (`DIR C:\ /-C /-O /W`) DO (
+echo checking free disk space on F:\
+FOR /F "usebackq tokens=3" %%s IN (`DIR F:\ /-C /-O /W`) DO (
 	SET FREE_SPACE=%%s
 )
 if !FREE_SPACE! LSS !MINDRIVESPACE! (
-	echo "%DATE% %TIME%: low space on C:, exiting" >> %LOGFILEPATH%
+	echo "%DATE% %TIME%: low space on F:, exiting" >> %LOGFILEPATH%
 	exit /b 1
 ) ELSE (
-	echo "%DATE% %TIME%: sufficient space on C:\, continuing" >> %LOGFILEPATH%
+	echo "%DATE% %TIME%: sufficient space on F:\, continuing" >> %LOGFILEPATH%
 )
 REM echo stopping and disabling Sophos
 REM wmic service where "caption like 'Sophos%%'" call Stopservice
@@ -45,10 +45,11 @@ NET START MSSQL$AUTODESKVAULT
 IISRESET /RESTART
 
 echo changing to working folder
-cd "C:\Users\alex.fielder\Dropbox\Graitec\Vault Backup"
+F:
+cd "F:\Dropbox\Graitec\Vault Backup"
 echo removing existing backup directories if there are any present
 for /f %%i in ('dir /a:d /b Vault*') do rd /s /q %%i
-echo performing vault backup from Vault Professional 2017
+echo performing vault backup from Vault Professional 2018
 REM -WA is short for Windows Authentication - does not work with Vault basic!
 call "%ADMSCONSOLEPATH%" -Obackup -B"%VAULTBACKUPPATH%" -WA -VAL -DBSC -S -L"%LOGFILEPATH%"
 
