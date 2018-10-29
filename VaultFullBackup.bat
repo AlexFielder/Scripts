@@ -1,11 +1,11 @@
 @echo off
 setlocal enableDelayedExpansion
 echo setting up variables...
-SET VAULTBACKUPPATH=F:\Dropbox\Graitec\Vault Backup
-SET LOGFILEPATH=F:\Dropbox\Graitec\GRA0387AF_Vault_Backup.txt
-SET SEVENZIPLOGFILEPATH=F:\Dropbox\Graitec\GRA0387AF_Zip_Log.txt
+SET VAULTBACKUPPATH=F:\Onedrive For Business\OneDrive - GRAITEC\Vault Backup
+SET LOGFILEPATH=F:\Onedrive For Business\OneDrive - GRAITEC\GRA0387AF_Vault_Backup.txt
+SET SEVENZIPLOGFILEPATH=F:\Onedrive For Business\OneDrive - GRAITEC\GRA0387AF_Zip_Log.txt
 SET SEVENZIPPATH=C:\ProgramData\chocolatey\bin\7za.exe
-SET ADMSCONSOLEPATH=C:\Program Files\Autodesk\ADMS Professional 2018\ADMS Console\Connectivity.ADMSConsole.exe
+SET ADMSCONSOLEPATH=C:\Program Files\Autodesk\ADMS Professional 2019\ADMS Console\Connectivity.ADMSConsole.exe
 SET NUMDAYSBACKUPTOKEEP=-15
 SET MINMEMVALUE=2000000
 SET MINDRIVESPACE=10000000
@@ -34,9 +34,10 @@ REM echo stopping and disabling Sophos
 REM wmic service where "caption like 'Sophos%%'" call Stopservice
 REM wmic service where "caption like 'Sophos%%' and  Startmode<>'Disabled'" call ChangeStartmode Disabled
 echo pausing Dropbox, Searchindexer, Everything using the sysinternals tool PSSuspend!
-pssuspend dropbox
+REM pssuspend dropbox
 pssuspend searchindexer
 pssuspend everything
+pssuspend onedrive
 
 REM THIS WILL STOP THE WEB SERVER AND "CYCLE" THE SQL SERVER
 IISRESET /STOP
@@ -46,10 +47,10 @@ IISRESET /RESTART
 
 echo changing to working folder
 F:
-cd "F:\Dropbox\Graitec\Vault Backup"
+cd %VAULTBACKUPPATH%
 echo removing existing backup directories if there are any present
 for /f %%i in ('dir /a:d /b Vault*') do rd /s /q %%i
-echo performing vault backup from Vault Professional 2018
+echo performing vault backup from Vault Professional 2019
 REM -WA is short for Windows Authentication - does not work with Vault basic!
 call "%ADMSCONSOLEPATH%" -Obackup -B"%VAULTBACKUPPATH%" -WA -VAL -DBSC -S -L"%LOGFILEPATH%"
 

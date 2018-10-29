@@ -1,0 +1,19 @@
+﻿[PMC Code v5.0.5]|F3||1|Window,2,Fast,0,1,Input,-1,-1,1|1|Macro1
+Groups=Start:1
+1|WinActivate||1|333|WinActivate|| ahk_class Shell_TrayWnd|||
+2|WinActivate||1|333|WinActivate||LDView: C:\ldraw\parts\4346ps1.dat ahk_class LDViewWindow|||
+3|LControl Down|{LControl Down}|1|0|Send|||||
+4|e Down|{e Down}|1|0|Send|||||
+5|WinActivate||1|333|WinActivate||Export LDraw Model ahk_class #32770|||
+6|e Up|{e Up}|1|0|ControlSend|Edit1|Export LDraw Model ahk_class #32770|||
+7|LControl Up|{LControl Up}|1|0|Send|||||
+8|NumpadEnter Down|{NumpadEnter Down}|1|0|ControlSend|Edit1|Export LDraw Model ahk_class #32770|||
+9|WinActivate||1|333|WinActivate||Confirm Save As ahk_class #32770|||
+10|NumpadEnter Up|{NumpadEnter Up}|1|0|ControlSend|Button2|Confirm Save As ahk_class #32770|||
+11|WinActivate||1|333|WinActivate||LDView: C:\ldraw\parts\4346ps1.dat ahk_class LDViewWindow|||
+12|LControl Down|{LControl Down}|1|0|Send|||||
+13|q Down|{q Down}|1|0|Send|||||
+14|WinActivate||1|333|WinActivate||D:\Dropbox\Scripts\MyScript.ahk - Notepad++ ahk_class Notepad++|||
+15|q Up|{q Up}|1|0|ControlSend|Scintilla2|D:\Dropbox\Scripts\MyScript.ahk - Notepad++ ahk_class Notepad++|||
+16|LControl Up|{LControl Up}|1|0|Send|||||
+

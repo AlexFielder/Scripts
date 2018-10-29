@@ -35,3 +35,8 @@ _ReSharper*/
 packages/
 
 Arma stuff/
+*.backup
+Packer/
+*.ini
+*.RDP
+*.rdp
