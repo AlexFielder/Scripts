@@ -34,7 +34,7 @@ REM echo stopping and disabling Sophos
 REM wmic service where "caption like 'Sophos%%'" call Stopservice
 REM wmic service where "caption like 'Sophos%%' and  Startmode<>'Disabled'" call ChangeStartmode Disabled
 echo pausing Dropbox, Searchindexer, Everything using the sysinternals tool PSSuspend!
-REM pssuspend dropbox
+pssuspend dropbox
 pssuspend searchindexer
 pssuspend everything
 pssuspend onedrive
@@ -73,6 +73,7 @@ echo resuming Dropbox, Searchindexer, Everything and Sophos
 pssuspend -r dropbox
 pssuspend -r searchindexer
 pssuspend -r everything
+pssuspend -r onedrive
 REM wmic service where "caption like 'Sophos%%' and Startmode='Disabled'" call ChangeStartmode Automatic
 REM wmic service where "caption like 'Sophos%%'" call Startservice
 echo finished!

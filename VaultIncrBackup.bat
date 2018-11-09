@@ -73,6 +73,7 @@ echo resuming Dropbox, Searchindexer, Everything and Sophos
 pssuspend -r dropbox
 pssuspend -r searchindexer
 pssuspend -r everything
+pssuspend -r onedrive
 REM wmic service where "caption like 'Sophos%%' and Startmode='Disabled'" call ChangeStartmode Automatic
 REM wmic service where "caption like 'Sophos%%'" call Startservice
 echo finished!
