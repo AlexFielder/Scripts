@@ -1,2 +1,2 @@
-vboxmanage controlvm Pihole savestate
+vboxmanage controlvm PiHole savestate
 shutdown -r -t 0

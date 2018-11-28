@@ -6,7 +6,7 @@ SET LOGFILEPATH=F:\Onedrive For Business\OneDrive - GRAITEC\GRA0387AF_Vault_Back
 SET SEVENZIPLOGFILEPATH=F:\Onedrive For Business\OneDrive - GRAITEC\GRA0387AF_Zip_Log.txt
 SET SEVENZIPPATH=C:\ProgramData\chocolatey\bin\7za.exe
 SET ADMSCONSOLEPATH=C:\Program Files\Autodesk\ADMS Professional 2019\ADMS Console\Connectivity.ADMSConsole.exe
-SET NUMDAYSBACKUPTOKEEP=-15
+SET NUMDAYSBACKUPTOKEEP=-60
 SET MINMEMVALUE=2000000
 SET MINDRIVESPACE=10000000
 REM echo testing available system resources
