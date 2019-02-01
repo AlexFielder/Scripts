@@ -1,9 +1,12 @@
 @echo off
 setlocal enableDelayedExpansion
 echo setting up variables...
-SET VAULTBACKUPPATH=F:\Onedrive For Business\OneDrive - GRAITEC\Vault Backup
-SET LOGFILEPATH=F:\Onedrive For Business\OneDrive - GRAITEC\GRA0387AF_Vault_Backup.txt
-SET SEVENZIPLOGFILEPATH=F:\Onedrive For Business\OneDrive - GRAITEC\GRA0387AF_Zip_Log.txt
+SET VAULTBACKUPPATH=F:\Dropbox\Graitec\Vault Backup
+REM SET VAULTBACKUPPATH=F:\Onedrive For Business\OneDrive - GRAITEC\Vault Backup <-removed because OneDrive for business is b0rked.
+REM SET LOGFILEPATH=F:\Onedrive For Business\OneDrive - GRAITEC\GRA0387AF_Vault_Backup.txt
+SET LOGFILEPATH=F:\Dropbox\Graitec\GRA0387AF_Vault_Backup.txt
+REM SET SEVENZIPLOGFILEPATH=F:\Onedrive For Business\OneDrive - GRAITEC\GRA0387AF_Zip_Log.txt
+SET SEVENZIPLOGFILEPATH=F:\Dropbox\Graitec\GRA0387AF_Zip_Log.txt
 SET SEVENZIPPATH=C:\ProgramData\chocolatey\bin\7za.exe
 SET ADMSCONSOLEPATH=C:\Program Files\Autodesk\ADMS Professional 2019\ADMS Console\Connectivity.ADMSConsole.exe
 SET NUMDAYSBACKUPTOKEEP=-60
