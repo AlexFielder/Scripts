@@ -42,3 +42,5 @@ Packer/
 *.rdp
 Dart/
 *.lnk
+phpmyadmin/
+HoundAzure/
