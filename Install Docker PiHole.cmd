@@ -1,0 +1,3 @@
+REM Add current user to Hyper-V Administrators group in netplwiz tool prior to running:
+docker pull pihole/pihole
+docker run -d --name pihole -p 53:53/tcp -p 53:53/udp -p 80:80 -p 443:443 -v "C:\\Users\\alex.fielder\\OneDrive\\Documents\\pihole-config\\pihole\\:/etc/pihole/" -v "C:\\Users\\alex.fielder\\OneDrive\\Documents\\pihole-config\\dnsmasq.d\\:/etc/dnsmasq.d/" -e ServerIP="10.0.75.1" -e WEBPASSWORD=admin --restart=unless-stopped pihole/pihole:latest
