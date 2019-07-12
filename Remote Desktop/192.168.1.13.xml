@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE vncaddressbook [
+<!ENTITY COMPANY "RealVNC Ltd.">
+<!ELEMENT vncaddressbook (folder*,file*)>
+<!ATTLIST vncaddressbook password CDATA #IMPLIED>
+<!ELEMENT folder (folder*,file*)>
+<!ATTLIST folder name CDATA #REQUIRED>
+<!ELEMENT file (section*)>
+<!ATTLIST file name CDATA #REQUIRED>
+<!ELEMENT section (param*)>
+<!ATTLIST section name CDATA #REQUIRED>
+<!ELEMENT param (#PCDATA)>
+<!ATTLIST param name CDATA #REQUIRED>
+<!ATTLIST param value CDATA #REQUIRED>
+]>
+<vncaddressbook password="8f15116a2c8c40345612e0bffbc3901f3db1d140fb64a3bc4a5c1b956f2f9052xbf6bc896ece58f8d">
+<file name="192.168.1.13">
+<section name="Connection">
+<param name="Host" value="192.168.1.13" />
+</section>
+<section name="Options">
+<param name="Encryption" value="Server" />
+<param name="UserName" value="pi" />
+<param name="Scaling" value="AspectFit" />
+</section>
+<section name="Signature">
+<param name="DotVncFileSignature" value="2cab80019d1c2552fd89a9335fc07a57edebe674acd15590b3bc9679088f50b818394a636a6a388484ef9b3104649e4b5312c3748a4f58f5e6d0b443431f7844258a2487f72f8119aebe9581c425fcd332b61e97c681cc18b836b1d5303c50c79e92c93c8b467ccc23832367696287704435432e674904fd34e51e41x94ac64fd6e3a73b0" />
+</section>
+</file>
+</vncaddressbook>

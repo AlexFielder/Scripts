@@ -16,7 +16,8 @@ Param(
     [int64] $maxfilesize = 10MB, 
     [int64] $totalsize = 100MB, 
     [int] $timerangehours = 24, 
-    [string] $filenameseed = "abcdefghijkl012345"    
+    [string] $filenameseed = "abcdefghijkl012345",
+    [int] $numProjects = 50    
 ) 
 
 #create and start a stopwatch object to measure how long it all takes.
