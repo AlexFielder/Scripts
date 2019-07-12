@@ -40,16 +40,18 @@ if (-not (Test-Path -Path $TargetPath -PathType Container ))
 
 $currentsize = [int64]0
 $currentime = Get-Date
+Push-Location $TargetPath
 while ($currentsize -lt $totalsize)
 {
-    Push-Location
     ForEach ($number in 1..$numProjects)
     {
-        if(![System.IO.File]::Exists("$TargetPath\$number")){
-            New-Item -ItemType Directory -Path "$TargetPath\$number"
+        $projectNumber = Get-Random -Minimum 0 -Maximum (9999 - $numProjects)
+        $paddedProjectNum = ([string]($number + $projectNumber)).PadLeft(4,'0')
+        $newPath = "$TargetPath\$paddedProjectNum"
+        if(![System.IO.File]::Exists("$newPath")){
+            New-Item -ItemType Directory -Path "$newPath"
         }
-        Set-Location -Path "$TargetPath\$number"
-        $path = Get-Location
+        Set-Location -Path "$newPath"
         #
         # generate a random file size. Do the smart thing if min==max. Do not exceed the specified total size.
         #
@@ -75,7 +77,7 @@ while ($currentsize -lt $totalsize)
         #
         $filename = ($filenameseed.ToCharArray() | Get-Random -Count ($filenameseed.Length)) -join ''
         $Ext = Get-Random -InputObject $Extlist
-        $path = Join-Path $path "$($filename)$Ext"
+        $path = Join-Path $newPath "$($filename)$Ext"
         # $path = Join-Path $TargetPath "$($filename)$Ext"
 
         #
