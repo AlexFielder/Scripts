@@ -16,7 +16,7 @@ Param(
     [int64] $maxfilesize = 10MB, 
     [int64] $totalsize = 100MB, 
     [int] $timerangehours = 24, 
-    [string] $filenameseed = "abcdefghijkl012345",
+    [string] $filenameseed = "0123456789",
     [int] $numProjects = 50    
 ) 
 
