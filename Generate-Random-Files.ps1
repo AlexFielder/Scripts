@@ -48,7 +48,7 @@ while ($currentsize -lt $totalsize)
         $projectNumber = Get-Random -Minimum 0 -Maximum (9999 - $numProjects)
         $paddedProjectNum = ([string]($number + $projectNumber)).PadLeft(4,'0')
         $newPath = "$TargetPath\$paddedProjectNum"
-        if(![System.IO.File]::Exists("$newPath")){
+        if(!(test-path "$newPath")){
             New-Item -ItemType Directory -Path "$newPath"
         }
         Set-Location -Path "$newPath"
