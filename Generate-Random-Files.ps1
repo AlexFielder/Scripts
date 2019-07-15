@@ -87,7 +87,7 @@ while ($currentsize -lt $totalsize)
         #
         $filename = ($filenameseed.ToCharArray() | Get-Random -Count ($filenameseed.Length)) -join ''
         $Ext = Get-Random -InputObject $Extlist
-        $path = Join-Path $newPath "$($filename)$Ext"
+        $path = Join-Path $newPath "$($projectNumber + "-" + $filename)$Ext"
         # $path = Join-Path $TargetPath "$($filename)$Ext"
 
         #
