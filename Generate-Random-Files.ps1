@@ -41,13 +41,23 @@ if (-not (Test-Path -Path $TargetPath -PathType Container ))
 $currentsize = [int64]0
 $currentime = Get-Date
 Push-Location $TargetPath
+
+#$missionList = New-Object "System.Collections.Generic.List[mission]"
+$randomProjectNumList = New-Object  "System.Collections.Generic.List[string]"
+$randomProjectNum = new-Object int32
+ForEach ($number in 1..$numProjects) {
+    $randomProjectNum = Get-Random -Minimum 1 -Maximum (9999 - $numProjects)
+    $paddedProjectNum = ([string]($randomProjectNum)).PadLeft(4,'0')
+    $randomProjectNumList.add($paddedProjectNum)
+}
+
 while ($currentsize -lt $totalsize)
 {
-    ForEach ($number in 1..$numProjects)
+    ForEach ($projectNumber in $randomProjectNumList)
     {
-        $projectNumber = Get-Random -Minimum 0 -Maximum (9999 - $numProjects)
-        $paddedProjectNum = ([string]($number + $projectNumber)).PadLeft(4,'0')
-        $newPath = "$TargetPath\$paddedProjectNum"
+        #$projectNumber = Get-Random -Minimum 0 -Maximum (9999 - $numProjects)
+        #$paddedProjectNum = ([string]($number + $projectNumber)).PadLeft(4,'0')
+        $newPath = "$TargetPath\$projectNumber"
         if(!(test-path "$newPath")){
             New-Item -ItemType Directory -Path "$newPath"
         }
