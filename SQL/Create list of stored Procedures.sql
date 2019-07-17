@@ -1,0 +1,14 @@
+--DROP TABLE #ListOfSPs
+CREATE TABLE #ListOfSPs 
+    (
+        DBName varchar(100), 
+        [OBJECT_ID] INT,
+        SPName varchar(100)
+    )
+
+    EXEC sp_msforeachdb 'USE [?]; INSERT INTO #ListOfSPs Select ''?'', Object_Id, Name FROM sys.procedures'
+
+    SELECT 
+        * 
+    FROM #ListOfSPs
+	ORDER BY [DBName], [SPName]
