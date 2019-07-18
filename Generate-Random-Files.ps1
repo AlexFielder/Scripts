@@ -20,6 +20,8 @@ Param(
     [int] $numProjects = 50    
 ) 
 
+[int] $fileCount = 0
+
 #create and start a stopwatch object to measure how long it all takes.
 $stopwatch = [Diagnostics.Stopwatch]::StartNew()
 
@@ -46,7 +48,7 @@ Push-Location $TargetPath
 $randomProjectNumList = New-Object  "System.Collections.Generic.List[string]"
 $randomProjectNum = new-Object int32
 ForEach ($number in 1..$numProjects) {
-    $randomProjectNum = Get-Random -Minimum 1 -Maximum (9999 - $numProjects)
+    $randomProjectNum = Get-Random -Minimum 1 -Maximum (999999 - $numProjects)
     $paddedProjectNum = ([string]($randomProjectNum)).PadLeft(4,'0')
     $randomProjectNumList.add($paddedProjectNum)
 }
@@ -112,6 +114,7 @@ while ($currentsize -lt $totalsize)
                 timestamp = $timestamp
                 datasize = $filesize
             }
+            $fileCount += 1
         } catch {
             $message = "failed to write data to $path, error $($_.Exception.Message)" 
             Throw $message 
@@ -123,3 +126,4 @@ Pop-Location
 # how long did it all take?
 $stopwatch.stop()
 $stopwatch
+Write-Output "Total new fileCount = " + $fileCount
