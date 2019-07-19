@@ -1,0 +1,1 @@
+gci -r -file |% FullName > test.csv
