@@ -1,1 +1,1 @@
-gci -r -file |% FullName > test.csv
+Get-ChildItem -r -file |ForEach-Object FullName > test.csv
