@@ -8,11 +8,25 @@ $stopwatch = [Diagnostics.Stopwatch]::StartNew()
 
 if (Test-path($InputCsv)) 
 {
-    $CheckedFiles = New-Object "System.Collections.Generic.List[fileToVerify]"
+    # $CheckedFiles = New-Object "System.Collections.Generic.List[fileToVerify]"
     [System.IO.Fileinfo]$csvfile = Get-Item -path $InputCsv
+    
+    [String]$OutputCsv = $csvfile.DirectoryName+"\output.csv"
+
+
+    # if (!(Test-Path $OutputCsv))
+    # {
+    #     New-Item -path $OutputCsv -type "file"
+    # }
+    # else {
+    #     # Remove-Item -Path $OutputCsv
+    #     New-Item -path $OutputCsv -type "file"
+    # }
+    
     $csv = Import-Csv $InputCsv
     Write-output "Loading csv into memory"
     [int32]$MissingFiles = 0
+    [int32]$FileCount = 0
     foreach($item in $csv)
     {
         $file = New-Object fileToVerify
@@ -25,14 +39,13 @@ if (Test-path($InputCsv))
             $file.FileExists = "false"
             $MissingFiles += 1
         }
-        $CheckedFiles.add($file)
+        $FileCount += 1
+        $file.dateChecked = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss tt')
+        $file | Export-Csv $OutputCsv -NoTypeInformation -Append
+        # $CheckedFiles.add($file)
     }
-    [String]$OutputCsv = $csvfile.DirectoryName+"\output.csv"
-    if (!(Test-Path $OutputCsv))
-    {
-        New-Item -path $OutputCsv -type "file"
-    }
-    $CheckedFiles | Export-Csv $OutputCsv -NoTypeInformation
+    
+    # $CheckedFiles | Export-Csv $OutputCsv -NoTypeInformation
 }
 
 # how long did it all take?
@@ -42,14 +55,15 @@ $stopwatch.stop()
 # show what we did.
 [pscustomobject] @{
     csv_output = $OutputCsv
-    total_files = $CheckedFiles.Count
+    total_files = $FileCount
     missing_files = $MissingFiles
     time_taken = $stopwatch.elapsed
 }
 
 Class fileToVerify {
-    [String]$FileName
-    [String]$FileExists #= "false"
+    [String]$FileName = ""
+    [String]$FileExists = "" #= "false"
+    [String]$dateChecked = ""
 }
 
 
