@@ -53,44 +53,57 @@ if (Test-path($InputCsv))
     [int32]$MissingFiles = 0
     [int32]$FileCount = 0
     
-    workflow DoSomeWork {
-        param(
-        [int]$ThrottleLimit = 5
-        )
-        foreach -parallel -throttle $ThrottleLimit ($item in $csv)
-        {
-            [int32]$x = 0
-            sequence {
-                $obj = New-Object -type PSObject @{
-                    Name = $item.FileName
-                    FileExists = Test-Path($item.FileName) ? "true" : "false"
-                    dateChecked = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss tt')
-                }
-                Write-Output $obj
-                # $obj | Export-Csv -Path "C:\Temp\Results_$x.csv" -Append
-                # $obj | Export-Csv $OutputCsv -Append
-            }
-            $x++
-            # $file = New-Object -type fileToVerify
-            # $file.FileName = $item.FileName
-            # if(Test-Path($file.FileName))
-            # {
-            #     $file.FileExists = "true"
-            # }
-            # else {
-            #     $file.FileExists = "false"
-            #     $MissingFiles += 1
-            # }
-            # $FileCount += 1
-            # $file.dateChecked = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss tt')
-            # $file | Export-Csv $OutputCsv -NoTypeInformation -Append
-            # $CheckedFiles.add($file)
-            # $workflow:ans += $obj
-            
+    $scriptBlock = {
+        $obj = New-Object -type PSObject @{
+            Name = $item.FileName
+            FileExists = Test-Path($item.FileName) ? "true" : "false"
+            dateChecked = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss tt')
         }
-        # $ans
-    # $CheckedFiles | Export-Csv $OutputCsv -NoTypeInformation
+        Write-Output $obj
+        $obj | Export-Csv -Path "C:\Temp\Results_$x.csv" -Append
+
     }
+    foreach ($item in $csv) {
+        Start-RSJob -Name $item -ScriptBlock $scriptBlock -Throttle 5
+    }
+    # workflow DoSomeWork {
+    #     param(
+    #     [int]$ThrottleLimit = 5
+    #     )
+    #     foreach -parallel -throttle $ThrottleLimit ($item in $csv)
+    #     {
+    #         [int32]$x = 0
+    #         sequence {
+    #             $obj = New-Object -type PSObject @{
+    #                 Name = $item.FileName
+    #                 FileExists = Test-Path($item.FileName) ? "true" : "false"
+    #                 dateChecked = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss tt')
+    #             }
+    #             Write-Output $obj
+    #             # $obj | Export-Csv -Path "C:\Temp\Results_$x.csv" -Append
+    #             # $obj | Export-Csv $OutputCsv -Append
+    #         }
+    #         $x++
+    #         # $file = New-Object -type fileToVerify
+    #         # $file.FileName = $item.FileName
+    #         # if(Test-Path($file.FileName))
+    #         # {
+    #         #     $file.FileExists = "true"
+    #         # }
+    #         # else {
+    #         #     $file.FileExists = "false"
+    #         #     $MissingFiles += 1
+    #         # }
+    #         # $FileCount += 1
+    #         # $file.dateChecked = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss tt')
+    #         # $file | Export-Csv $OutputCsv -NoTypeInformation -Append
+    #         # $CheckedFiles.add($file)
+    #         # $workflow:ans += $obj
+            
+    #     }
+    #     # $ans
+    # # $CheckedFiles | Export-Csv $OutputCsv -NoTypeInformation
+    # }
     # DoSomeWork | Export-Csv $OutputCsv -NoTypeInformation -Append
 }
 # how long did it all take?
