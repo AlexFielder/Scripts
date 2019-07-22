@@ -6,23 +6,41 @@ param (
 #create and start a stopwatch object to measure how long it all takes.
 $stopwatch = [Diagnostics.Stopwatch]::StartNew()
 
+[System.IO.Fileinfo]$csvfile = Get-Item -path $InputCsv
+$path = $csvfile.DirectoryName
+[String]$OutputCsv = $path+"\output.csv"
+$baseName = "output"
+
+$files = Get-ChildItem -Path ("{0}\{1}*" -f $path, $baseName)
+
+if ($files) {
+    "Existing log (csv) files found"
+    #Create custom column by removing the F and making it a integer, so only a number is returned
+    $numbers = $files | Select-Object @{Name="Number";Expression={[int]$_.BaseName.Replace($baseName, "")}}
+    "Found {0} existing files" -f $files.Count
+    #Take the number, sort descending, get the first value and then increment by 1
+    $max = ($numbers | Sort-Object -Property Number -Descending | Select-Object -First 1 -ExpandProperty Number) + 1
+    "The next number is {0}" -f $max
+    #Use padding to pad zeros up to 5 characters
+    $file = "output{0}.csv" -f $max.ToString().PadLeft(5,'0')
+    "Incrementing {0} to generate file {1}" -f $max, $file
+    $OutputCsv = $path+"\"+$file
+    New-Item -Path $OutputCsv -ItemType File
+
+}
+else {
+    $file = ("{0}{1}.csv" -f $baseName, "1".ToString().PadLeft(5,'0'))
+    "Creating first file {0}" -f $file
+
+    New-Item -Path $path -Name $file -ItemType File
+}
+
 if (Test-path($InputCsv)) 
 {
-    # $CheckedFiles = New-Object "System.Collections.Generic.List[fileToVerify]"
     [System.IO.Fileinfo]$csvfile = Get-Item -path $InputCsv
     
     [String]$OutputCsv = $csvfile.DirectoryName+"\output.csv"
 
-
-    # if (!(Test-Path $OutputCsv))
-    # {
-    #     New-Item -path $OutputCsv -type "file"
-    # }
-    # else {
-    #     # Remove-Item -Path $OutputCsv
-    #     New-Item -path $OutputCsv -type "file"
-    # }
-    
     $csv = Import-Csv $InputCsv
     Write-output "Loading csv into memory"
     [int32]$MissingFiles = 0
@@ -42,10 +60,7 @@ if (Test-path($InputCsv))
         $FileCount += 1
         $file.dateChecked = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss tt')
         $file | Export-Csv $OutputCsv -NoTypeInformation -Append
-        # $CheckedFiles.add($file)
     }
-    
-    # $CheckedFiles | Export-Csv $OutputCsv -NoTypeInformation
 }
 
 # how long did it all take?
