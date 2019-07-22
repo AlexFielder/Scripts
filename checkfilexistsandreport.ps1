@@ -3,7 +3,6 @@ param (
     [String]$InputCsv = ""
 )
 
-#create and start a stopwatch object to measure how long it all takes.
 $stopwatch = [Diagnostics.Stopwatch]::StartNew()
 
 [System.IO.Fileinfo]$csvfile = Get-Item -path $InputCsv
@@ -37,13 +36,11 @@ else {
 
 if (Test-path($InputCsv)) 
 {
-    $CheckedFiles = New-Object "System.Collections.Generic.List[fileToVerify]"
     [System.IO.Fileinfo]$csvfile = Get-Item -path $InputCsv
-    
-    #[String]$OutputCsv = $csvfile.DirectoryName+"\output.csv"
-
     $csv = Import-Csv $InputCsv
     Write-output "Loading csv into memory"
+    $sw = New-Object System.IO.StreamWriter $OutputCsv
+    $sw.WriteLine("Filename","FileExists","DateChecked")
     [int32]$MissingFiles = 0
     [int32]$FileCount = 0
     foreach($item in $csv)
@@ -60,15 +57,12 @@ if (Test-path($InputCsv))
         }
         $FileCount += 1
         $file.dateChecked = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss tt')
-        #$file | Export-Csv $OutputCsv -NoTypeInformation -Append
-        $CheckedFiles.add($file)
+        $sw.WriteLine($file.FileName + "," + $file.FileExists + "," + $file.dateChecked)
     }
-    $CheckedFiles | Export-Csv $OutputCsv -NoTypeInformation
+    $sw.Close()
 }
 
-# how long did it all take?
 $stopwatch.stop()
-# $stopwatch
 
 # show what we did.
 [pscustomobject] @{
