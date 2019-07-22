@@ -6,7 +6,7 @@
     .PARAMETER InputCsv
         the path to the csv file to check
     .EXAMPLE
-        run from same folder as script is placed: .\checkfilexistsandreport.ps1 -inputcsv "c:\temp\test.csv"
+        run from same folder as script is placed: .\checkfilexistsandreport.ps1 -inputcsv "c:\path\to\test.csv"
 
 #>
 
