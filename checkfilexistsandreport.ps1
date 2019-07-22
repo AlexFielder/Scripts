@@ -37,9 +37,10 @@ else {
 
 if (Test-path($InputCsv)) 
 {
+    $CheckedFiles = New-Object "System.Collections.Generic.List[fileToVerify]"
     [System.IO.Fileinfo]$csvfile = Get-Item -path $InputCsv
     
-    [String]$OutputCsv = $csvfile.DirectoryName+"\output.csv"
+    #[String]$OutputCsv = $csvfile.DirectoryName+"\output.csv"
 
     $csv = Import-Csv $InputCsv
     Write-output "Loading csv into memory"
@@ -59,8 +60,10 @@ if (Test-path($InputCsv))
         }
         $FileCount += 1
         $file.dateChecked = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss tt')
-        $file | Export-Csv $OutputCsv -NoTypeInformation -Append
+        #$file | Export-Csv $OutputCsv -NoTypeInformation -Append
+        $CheckedFiles.add($file)
     }
+    $CheckedFiles | Export-Csv $OutputCsv -NoTypeInformation
 }
 
 # how long did it all take?
