@@ -1,3 +1,15 @@
+<#
+    .SYNOPSIS
+        Simple cmdlet to verify files exist againts passed list
+    .DESCRIPTION
+        This function will write a CSV output containing three columns: Filename, FileExists, dateChecked
+    .PARAMETER InputCsv
+        the path to the csv file to check
+    .EXAMPLE
+        run from same folder as script is placed: .\checkfilexistsandreport.ps1 -inputcsv "c:\temp\test.csv"
+
+#>
+
 [CmdletBinding()]
 param (
     [String]$InputCsv = ""
@@ -40,7 +52,7 @@ if (Test-path($InputCsv))
     $csv = Import-Csv $InputCsv
     Write-output "Loading csv into memory"
     $sw = New-Object System.IO.StreamWriter $OutputCsv
-    $sw.WriteLine("Filename","FileExists","DateChecked")
+    $sw.WriteLine("Filename, FileExists, DateChecked")
     [int32]$MissingFiles = 0
     [int32]$FileCount = 0
     foreach($item in $csv)
