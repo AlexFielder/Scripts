@@ -50,42 +50,7 @@ else {
 
     New-Item -Path $OutputCsv -ItemType File
 }
-# function Test-Path-Parallel {
-#     param (
-#         [Parameter(Mandatory = $true,
-#                    Position = 0)]
-#         [string]$filename,
-#         [Parameter(Mandatory = $true,
-#                    Position = 1)]
-#         [string]$outputPath
-#     )
-#     [System.Threading.Mutex]$mutex = New-Object System.Threading.Mutex
-#     $file = New-Object fileToVerify
-#     $file.FileName = $fileName
-#     if(Test-Path($fileName))
-#     {
-#         $file.FileExists = "true"
-#     }
-#     else {
-#         $file.FileExists = "false"
-#         $MissingFiles += 1
-#     }
-#     $FileCount += 1
-#     $file.dateChecked = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss tt')
-#     # $sw.WriteLine($file.FileName + "," + $file.FileExists + "," + $file.dateChecked)
-#     $mutex.WaitOne()|Out-Null
-#     try {
-#         using-object (System.IO.StreamWriter $sw = new-object System.IO.StreamWriter($outputPath, $true)) {  
-#             $sw.WriteLine($file.FileName + "," + $file.FileExists + "," + $file.dateChecked)
-#         }
-#     }
-#     catch 
-#     {
-#         # Write-Output _$.Exception.message
-#     }
-#     $mutex.ReleaseMutex()|Out-Null
-    
-# }
+
 if (Test-path($InputCsv))
 {
     [System.IO.Fileinfo]$csvfile = Get-Item -path $InputCsv
@@ -96,16 +61,17 @@ if (Test-path($InputCsv))
     [int32]$MissingFiles = 0
     [int32]$FileCount = 0
     
-    foreach ($item in $csv) {
-        #Start-RSJob -Name $item -Throttle $MaxJobs -Batch "Verification" -ArgumentList $item, $OutputCsv -ScriptBlock {
-            #[System.Threading.Mutex]$mutex = New-Object System.Threading.Mutex
+    $S = 1..20
+    $S|Start-RSJob -Name $S -Throttle $MaxJobs -ArgumentList $OutputCsv -ScriptBlock {
+        $verifyFiles = $using:csv
+        foreach($fileToCheck in $verifyFiles) {
+            System.Threading.Mutex $mutex = New-Object System.Threading.Mutex
             $file = New-Object -type PSObject @{
-                Name = $item
-                FileExists = Test-Path($item)
+                Name = $fileToCheck
+                FileExists = Test-Path($fileToCheck)
                 dateChecked = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss tt')
             }
-            # $sw.WriteLine($file.FileName + "," + $file.FileExists + "," + $file.dateChecked)
-            #$mutex.WaitOne()|Out-Null
+            $mutex.WaitOne()#|Out-Null
             try {
                 using-object (System.IO.StreamWriter $sw = new-object System.IO.StreamWriter($OutputCsv, $true)) {  
                     $sw.WriteLine($file.Name + "," + $file.FileExists + "," + $file.dateChecked)
@@ -113,33 +79,13 @@ if (Test-path($InputCsv))
             }
             catch 
             {
-                # Write-Output _$.Exception.message
+                Write-Output _$.Exception.message
             }
-            #$mutex.ReleaseMutex()|Out-Null
-        #}|Out-Null
-    }
-    get-rsjob | Wait-RSJob -showprogress | receive-rsjob
-        # wait-rsjob -showprogress | receive-rsjob
-    $sw.Close()
-    # Get-RSjob | Receive-RSJob
+            $mutex.ReleaseMutex()#|Out-Null
+        }
+    }#|Out-Null
+    get-rsjob | Wait-RSJob -showprogress | Receive-RSJob
 }
-    # foreach($item in $csv)
-    # {
-    #     $file = New-Object fileToVerify
-    #     $file.FileName = $item.FileName
-    #     if(Test-Path($file.FileName))
-    #     {
-    #         $file.FileExists = "true"
-    #     }
-    #     else {
-    #         $file.FileExists = "false"
-    #         $MissingFiles += 1
-    #     }
-    #     $FileCount += 1
-    #     $file.dateChecked = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss tt')
-    #     $sw.WriteLine($file.FileName + "," + $file.FileExists + "," + $file.dateChecked)
-    # }
-    # $sw.Close()
 
 
 $stopwatch.stop()
