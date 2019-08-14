@@ -49,7 +49,7 @@ else {
 if (Test-path($InputCsv)) 
 {
     [System.IO.Fileinfo]$csvfile = Get-Item -path $InputCsv
-    $csv = Import-Csv $InputCsv
+    $csv = Get-Content $InputCsv #Import-Csv $InputCsv
     Write-output "Loading csv into memory"
     $sw = New-Object System.IO.StreamWriter $OutputCsv
     $sw.WriteLine("Filename, FileExists, DateChecked")
@@ -58,8 +58,8 @@ if (Test-path($InputCsv))
     foreach($item in $csv)
     {
         $file = New-Object fileToVerify
-        $file.FileName = $item.FileName
-        if(Test-Path($file.FileName))
+        $file.FileName = $item
+        if(Test-Path -LiteralPath $file.FileName)
         {
             $file.FileExists = "true"
         }
@@ -69,7 +69,7 @@ if (Test-path($InputCsv))
         }
         $FileCount += 1
         $file.dateChecked = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss tt')
-        $sw.WriteLine($file.FileName + "," + $file.FileExists + "," + $file.dateChecked)
+        $sw.WriteLine("'" + $file.FileName + "','" + $file.FileExists + "','" + $file.dateChecked + "'")
     }
     $sw.Close()
 }
