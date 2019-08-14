@@ -1,4 +1,4 @@
-DROP TABLE #ListOfSPs
+--DROP TABLE #ListOfSPs
 CREATE TABLE #ListOfSPs 
     (
         DBName varchar(100), 
@@ -13,4 +13,4 @@ CREATE TABLE #ListOfSPs
         * 
     FROM #ListOfSPs
 	WHERE year(modify_date) = 2019
-	ORDER BY [DBName], [SPName]
+	ORDER BY [modify_date]--[DBName], [SPName]
