@@ -59,10 +59,14 @@ if (Test-path($InputCsv))
     {
         $file = New-Object fileToVerify
         $file.FileName = $item
-        if(Test-Path -LiteralPath $file.FileName)
+        if([System.IO.File]::Exists($file.FileName))
         {
             $file.FileExists = "true"
         }
+        # if(Test-Path -LiteralPath $file.FileName)
+        # {
+        #     $file.FileExists = "true"
+        # }
         else {
             $file.FileExists = "false"
             $MissingFiles += 1
