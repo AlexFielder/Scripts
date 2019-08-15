@@ -1,13 +1,32 @@
-﻿# (mostly) pinched from here: https://gallery.technet.microsoft.com/scriptcenter/Generate-random-binary-3e891264
-# usage within vscode is done like this:
-# $topfolder = "C:\temp\CustomerName-dummy-data"
-# New-Item -Path $topfolder -ItemType Directory
-# & .\Generate-Random-Files.ps1 -Targetpath $topfolder -minfilesize 1KB -maxfilesize 1MB -totalsize 1GB -timerangehours 319740
-# or like this:
-# & .\Generate-Random-Files.ps1 -Targetpath $topfolder -minfilesize 100MB -maxfilesize 100MB -totalsize 10GB -timerangehours 0
-# & .\Generate-Random-Files.ps1 -Targetpath $topfolder -minfilesize 1KB -maxfilesize 1GB -totalsize 10GB -timerangehours 24
-# & .\Generate-Random-Files.ps1 -Targetpath $topfolder -minfilesize 1KB -maxfilesize 1MB -totalsize 1GB -timerangehours 48
-# 
+﻿<#
+    .SYNOPSIS
+    (mostly) pinched from here: https://gallery.technet.microsoft.com/scriptcenter/Generate-random-binary-3e891264
+    usage within vscode is done like this:
+    .DESCRIPTION
+        This function will generate a bunch of test files we can use for verification testing
+    .PARAMETER TargetPath
+        The path to write to
+    .PARAMETER MinFileSize
+        The smallest filesize required e.g. 1KB
+    .PARAMETER MaxFileSize
+        The largest filesize required e.g. 1GB
+    .PARAMETER TotalSize
+        The total amount of data required e.g. 10GB
+    .PARAMETER TimeRangeHours
+        The time in the past you want files to be "created" e.g. 24
+    .PARAMETER FileNameSeed
+        Default is 0123456789 but can be anything you want; except special characters
+    .PARAMETER NumProjects
+        Default is 50 which creates 50 project folders
+    .EXAMPLE
+        $topfolder = "C:\temp\CustomerName-dummy-data"
+        New-Item -Path $topfolder -ItemType Directory
+        & .\Generate-Random-Files.ps1 -Targetpath $topfolder -minfilesize 1KB -maxfilesize 1MB -totalsize 1GB -timerangehours 319740
+        or like this:
+        & .\Generate-Random-Files.ps1 -Targetpath $topfolder -minfilesize 100MB -maxfilesize 100MB -totalsize 10GB -timerangehours 0
+        & .\Generate-Random-Files.ps1 -Targetpath $topfolder -minfilesize 1KB -maxfilesize 1GB -totalsize 10GB -timerangehours 24
+        & .\Generate-Random-Files.ps1 -Targetpath $topfolder -minfilesize 1KB -maxfilesize 1MB -totalsize 1GB -timerangehours 48
+#>
 
 [CmdletBinding()] 
 Param( 
@@ -16,7 +35,7 @@ Param(
     [int64] $maxfilesize = 10MB, 
     [int64] $totalsize = 100MB, 
     [int] $timerangehours = 24, 
-    [string] $filenameseed = "0123456789!£$%^&*¬",
+    [string] $filenameseed = "0123456789", #!£$%^&*¬",
     [int] $numProjects = 50    
 ) 
 
@@ -26,7 +45,7 @@ Param(
 $stopwatch = [Diagnostics.Stopwatch]::StartNew()
 
 #dummy extension list
-$Extlist='.dwf','.dwg','dxf','.pdf','.docx','.xlsx','.zip','.rvt','.dog','.dgn','.txt'
+$Extlist='.dwf','.dwg','.dxf','.pdf','.docx','.xlsx','.zip','.rvt','.dog','.dgn','.txt'
 
 #
 # convert to absolute path as required by WriteAllBytes, and check existence of the directory.
