@@ -2,11 +2,11 @@
 # usage within vscode is done like this:
 # $topfolder = "C:\temp\CustomerName-dummy-data"
 # New-Item -Path $topfolder -ItemType Directory
-# & '.\Generate Random Files.ps1' -Targetpath $topfolder -minfilesize 1KB -maxfilesize 1MB -totalsize 1GB -timerangehours 319740
+# & .\Generate-Random-Files.ps1 -Targetpath $topfolder -minfilesize 1KB -maxfilesize 1MB -totalsize 1GB -timerangehours 319740
 # or like this:
-# & '.\Generate Random Files.ps1' -Targetpath $topfolder -minfilesize 100MB -maxfilesize 100MB -totalsize 10GB -timerangehours 0
-# & '.\Generate Random Files.ps1' -Targetpath $topfolder -minfilesize 1KB -maxfilesize 1GB -totalsize 10GB -timerangehours 24
-# & '.\Generate Random Files.ps1' -Targetpath $topfolder -minfilesize 1KB -maxfilesize 1MB -totalsize 1GB -timerangehours 48
+# & .\Generate-Random-Files.ps1 -Targetpath $topfolder -minfilesize 100MB -maxfilesize 100MB -totalsize 10GB -timerangehours 0
+# & .\Generate-Random-Files.ps1 -Targetpath $topfolder -minfilesize 1KB -maxfilesize 1GB -totalsize 10GB -timerangehours 24
+# & .\Generate-Random-Files.ps1 -Targetpath $topfolder -minfilesize 1KB -maxfilesize 1MB -totalsize 1GB -timerangehours 48
 # 
 
 [CmdletBinding()] 
@@ -16,7 +16,7 @@ Param(
     [int64] $maxfilesize = 10MB, 
     [int64] $totalsize = 100MB, 
     [int] $timerangehours = 24, 
-    [string] $filenameseed = "0123456789",
+    [string] $filenameseed = "0123456789!£$%^&*¬",
     [int] $numProjects = 50    
 ) 
 
@@ -97,7 +97,7 @@ while ($currentsize -lt $totalsize)
         #
         try
         {
-            [IO.File]::WriteAllBytes($path, $data)
+            [IO.File]::WriteAllBytes([Management.Automation.WildcardPattern]::Escape($path), $data)
             if ($timerangehours -gt 0)
             {
                 $timestamp = $currentime.AddHours(-1 * (Get-Random -Minimum 0 -Maximum $timerangehours))

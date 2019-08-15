@@ -68,8 +68,17 @@ if (Test-path($InputCsv))
         #     $file.FileExists = "true"
         # }
         else {
-            $file.FileExists = "false"
-            $MissingFiles += 1
+            #Escaped character test:
+            if(Test-path([Management.Automation.WildcardPattern]::Escape($file.FileName))) 
+            {
+                $file.FileExists = "true"
+            }
+            else 
+            {
+                $file.FileExists = "false"
+                $MissingFiles += 1    
+            }
+            
         }
         $FileCount += 1
         $file.dateChecked = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss tt')
