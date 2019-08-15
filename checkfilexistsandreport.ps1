@@ -49,10 +49,11 @@ else {
 if (Test-path($InputCsv)) 
 {
     [System.IO.Fileinfo]$csvfile = Get-Item -path $InputCsv
-    $csv = Get-Content $InputCsv #Import-Csv $InputCsv
+    #the -Encoding line below would work if Powershell was the same version everywhere!
+    $csv = Get-Content $InputCsv # $csv = Get-Content -Encoding "utf8BOM" $InputCsv #Import-Csv $InputCsv
     Write-output "Loading csv into memory"
     $sw = New-Object System.IO.StreamWriter $OutputCsv
-    $sw.WriteLine("Filename, FileExists, DateChecked")
+    $sw.WriteLine("Filename|FileExists|DateChecked")
     [int32]$MissingFiles = 0
     [int32]$FileCount = 0
     foreach($item in $csv)
@@ -69,6 +70,7 @@ if (Test-path($InputCsv))
         # }
         else {
             #Escaped character test:
+            Write-Debug "Testing path using alternate method because special characters"
             if(Test-path([Management.Automation.WildcardPattern]::Escape($file.FileName))) 
             {
                 $file.FileExists = "true"
@@ -82,7 +84,7 @@ if (Test-path($InputCsv))
         }
         $FileCount += 1
         $file.dateChecked = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss tt')
-        $sw.WriteLine("'" + $file.FileName + "','" + $file.FileExists + "','" + $file.dateChecked + "'")
+        $sw.WriteLine($file.FileName + "|" + $file.FileExists + "|" + $file.dateChecked)
     }
     $sw.Close()
 }
