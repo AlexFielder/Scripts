@@ -144,8 +144,8 @@ if ($CopyMethod -eq "Runspace") {
     # $Results | Format-Table
     <#Excel report#>
     $xlfile = "$env:Temp\testData.xlsx"
-    $excel = $Results | Export-Excel $xlfile -WorkSheetname Exported -AutoSize -TableName Report -StartRow 2 -Show
-    Close-ExcelPackage $excel -Show
+    $Results | Export-Excel $xlfile -WorkSheetname Exported -AutoSize -TableName Report -StartRow 2 -Show
+    # Close-ExcelPackage $excel -Show
 }
 
 $stopwatch.stop()
