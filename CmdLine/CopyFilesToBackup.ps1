@@ -11,13 +11,14 @@ e.g. C:\path\to\list\of\files\to\copy.txt
 default is 8 (but can be 100 if you want to stress the machine to maximum!)
 .PARAMETER LogName
 default is output.csv located in the same path as the Filelist
-.PARAMETER CopyMethod
+# .PARAMETER CopyMethod
 default is Runspace, other possible options are: sync, BITS
 .EXAMPLE
 to run using defaults just call this file:
 .\CopyFilesToBackup
 to run using anything else use this syntax:
 .\CopyFilesToBackup -filelist C:\path\to\list\of\files\to\copy.txt -NumCopyThreads 20 -LogName C:\temp\backup.log -CopyMethod Runspace
+.\CopyFilesToBackup -FileList .\copytest.csv -NumCopyThreads 30 -Verbose
 .NOTES
 #>
 
@@ -25,7 +26,7 @@ to run using anything else use this syntax:
 Param( 
     [String] $FileList = "C:\temp\copytest.csv", 
     [int] $NumCopyThreads = 8,
-    [string] $CopyMethod = "Runspace",
+    # [string] $CopyMethod = "Runspace",
     [String] $LogName
 ) 
 
@@ -37,7 +38,7 @@ $stopwatch = [Diagnostics.Stopwatch]::StartNew()
 #     [String]$DestFileName
 # }
 # Import-Module .\Invoke-Async.ps1
-Install-Module -Name ImportExcel
+# Install-Module -Name ImportExcel
 $filesToCopy = New-Object "System.Collections.Generic.List[PSCustomObject]"
 $csv = Import-Csv $FileList
 
@@ -101,7 +102,7 @@ function isDivisible([int32]$numfiles, [int32]$divisor) {
 #     }
 # }
 <# Runspaces version #>
-if ($CopyMethod -eq "Runspace") {
+# if ($CopyMethod -eq "Runspace") {
     $Runspacepool = [runspacefactory]::CreateRunspacePool(1,$NumCopyThreads)
     $Runspacepool.Open()
 
@@ -141,12 +142,12 @@ if ($CopyMethod -eq "Runspace") {
         }
     }
 
-    # $Results | Format-Table
+    $Results | Format-Table
     <#Excel report#>
-    $xlfile = "$env:Temp\testData.xlsx"
-    $Results | Export-Excel $xlfile -WorkSheetname Exported -AutoSize -TableName Report -StartRow 2 -Show
+    # $xlfile = "$env:Temp\testData.xlsx"
+    # $Results | Export-Excel $xlfile -WorkSheetname Exported -AutoSize -TableName Report -StartRow 2 -Show
     # Close-ExcelPackage $excel -Show
-}
+# }
 
 $stopwatch.stop()
 
