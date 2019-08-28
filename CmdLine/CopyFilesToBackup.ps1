@@ -52,25 +52,25 @@ foreach($item in $csv)
 
 [int32]$FileCount = 0
 
-if ($CopyMethod -eq "BITS") {
-<# the following works but is REALLY slow for some reason. #>
-    $results = foreach($file in $filesToCopy) {
-        [System.IO.Fileinfo]$DestinationFilePath = $file.DestFileName
-        [String]$DestinationDir = $DestinationFilePath.DirectoryName
-        if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
-            new-item -Path $DestinationDir -ItemType Directory
-        }
-        $job = Start-BitsTransfer -source $file.SrcFileName -Destination $file.DestFileName -Asynchronous
-        # Copy-item -Path $file.SrcFileName -Destination $file.DestFileName
-        $FileCount += 1
-        while( ($job.JobState.ToString() -eq 'Transferring') -or ($job.JobState.ToString() -eq 'Connecting') )
-        {
-            Write-host $Job.JobState.ToString()
-            Start-Sleep 3
-        }
-        Complete-BitsTransfer -BitsJob $job
-    }
-}
+# if ($CopyMethod -eq "BITS") {
+# <# the following works but is REALLY slow for some reason. #>
+#     $results = foreach($file in $filesToCopy) {
+#         [System.IO.Fileinfo]$DestinationFilePath = $file.DestFileName
+#         [String]$DestinationDir = $DestinationFilePath.DirectoryName
+#         if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
+#             new-item -Path $DestinationDir -ItemType Directory
+#         }
+#         $job = Start-BitsTransfer -source $file.SrcFileName -Destination $file.DestFileName -Asynchronous
+#         # Copy-item -Path $file.SrcFileName -Destination $file.DestFileName
+#         $FileCount += 1
+#         while( ($job.JobState.ToString() -eq 'Transferring') -or ($job.JobState.ToString() -eq 'Connecting') )
+#         {
+#             Write-host $Job.JobState.ToString()
+#             Start-Sleep 3
+#         }
+#         Complete-BitsTransfer -BitsJob $job
+#     }
+# }
 
 # createfolders($filesToCopy)
 function copyFileInfo ([PSCustomObject]$file) {
@@ -90,16 +90,16 @@ function isDivisible([int32]$numfiles, [int32]$divisor) {
 }
 
 <# works but can be runspaced? #>
-if($CopyMethod -eq "sync") {
-    foreach ($file in $files){ #ToCopy) {
-        $FileCount += 1
-        copyFileInfo($file)
-        <# would probably work if we weren't using a workflow #>
-        if (isDivisible($FileCount, 1000) -eq $true) {
-            write-host "Number of files: " + $FileCount
-        }
-    }
-}
+# if($CopyMethod -eq "sync") {
+#     foreach ($file in $files){ #ToCopy) {
+#         $FileCount += 1
+#         copyFileInfo($file)
+#         <# would probably work if we weren't using a workflow #>
+#         if (isDivisible($FileCount, 1000) -eq $true) {
+#             write-host "Number of files: " + $FileCount
+#         }
+#     }
+# }
 <# Runspaces version #>
 if ($CopyMethod -eq "Runspace") {
     $Runspacepool = [runspacefactory]::CreateRunspacePool(1,$NumCopyThreads)
