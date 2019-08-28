@@ -101,7 +101,7 @@ if($CopyMethod -eq "sync") {
     }
 }
 <# Runspaces version #>
-if ($CopyMethod -eq "Runspaces") {
+if ($CopyMethod -eq "Runspace") {
     $Runspacepool = [runspacefactory]::CreateRunspacePool(1,$NumCopyThreads)
     $Runspacepool.Open()
 
