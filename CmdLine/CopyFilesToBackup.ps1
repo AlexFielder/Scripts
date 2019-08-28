@@ -1,0 +1,172 @@
+<#
+.SYNOPSIS
+<Brief description>
+For examples type:
+Get-Help .\<filename>.ps1 -examples
+.DESCRIPTION
+Copys files from one path to another
+.PARAMETER FileList
+e.g. C:\path\to\list\of\files\to\copy.txt
+.PARAMETER NumCopyThreads
+default is 8 (but can be 100 if you want to stress the machine to maximum!)
+.PARAMETER LogName
+default is output.csv located in the same path as the Filelist
+.PARAMETER CopyMethod
+default is Runspace, other possible options are: sync, BITS
+.EXAMPLE
+to run using defaults just call this file:
+.\CopyFilesToBackup
+to run using anything else use this syntax:
+.\CopyFilesToBackup -filelist C:\path\to\list\of\files\to\copy.txt -NumCopyThreads 20 -LogName C:\temp\backup.log -CopyMethod Runspace
+.NOTES
+#>
+
+[CmdletBinding()] 
+Param( 
+    [String] $FileList = "C:\temp\copytest.csv", 
+    [int] $NumCopyThreads = 8,
+    [string] $CopyMethod = "Runspace",
+    [String] $LogName
+) 
+
+$stopwatch = [Diagnostics.Stopwatch]::StartNew()
+
+# . $PSScriptRoot\FileToCopy.ps1
+# Class fileToCopy {
+#     [String]$SrcFileName
+#     [String]$DestFileName
+# }
+# Import-Module .\Invoke-Async.ps1
+Import-Module BitsTransfer
+$filesToCopy = New-Object "System.Collections.Generic.List[PSCustomObject]"
+$csv = Import-Csv $FileList
+
+foreach($item in $csv)
+{
+    $fileToCopy = [PSCustomObject]@{
+        SrcFileName = $item.SrcFileName
+        DestFileName = $item.DestFileName
+    }
+    $filesToCopy.add($fileToCopy)
+}
+
+[int32]$FileCount = 0
+
+<# the following works but is REALLY slow for some reason. #>
+# $results = foreach($file in $filesToCopy) {
+#     [System.IO.Fileinfo]$DestinationFilePath = $file.DestFileName
+#     [String]$DestinationDir = $DestinationFilePath.DirectoryName
+#     if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
+#         new-item -Path $DestinationDir -ItemType Directory
+#     }
+#     $job = Start-BitsTransfer -source $file.SrcFileName -Destination $file.DestFileName -Asynchronous
+#     # Copy-item -Path $file.SrcFileName -Destination $file.DestFileName
+#     $FileCount += 1
+#     while( ($job.JobState.ToString() -eq 'Transferring') -or ($job.JobState.ToString() -eq 'Connecting') )
+#     {
+#         Write-host $Job.JobState.ToString()
+#         Start-Sleep 3
+#     }
+#     Complete-BitsTransfer -BitsJob $job
+# }
+
+# $sb = [scriptblock] {
+#     param([PSCustomObject] $file)
+#     # $FileToCopy = New-Object filetoCopy
+#     Copy-item -Path $file.SrcFileName -Destination $file.DestFileName
+# }
+# $results = Invoke-Async -Cmdlet Copy-Item -Set $filesToCopy -SetParam file -ScriptBlock $sb -Verbose -Measure:$true -ThreadCount 8
+# $results = Invoke-Async -Set $filesToCopy -SetParam [fileToCopy]file -ScriptBlock $sb -Verbose -Measure:$true -ThreadCount 8
+# $results = Invoke-Async -set $filesToCopy -setparam file -params @{destination=$file.DestFileName; path=$file.SrcFileName} -cmdlet copy-item
+# $results = Invoke-Async -set $filesToCopy -setparam @{destination="destination"; path="path"} -params @{destination=$file.DestFileName; path=$file.SrcFileName} -cmdlet copy-item -ThreadCount $NumCopyThreads
+# $results = Invoke-Async -Set $filesToCopy -SetParam file -ScriptBlock $sb -Verbose -Measure:$true -ThreadCount 8
+# workflow createfolders {
+#     param ([PSCustomObject]$files)
+    # foreach -parallel ($file in $files) {
+# Write-Host "Creating folder structure for export: "
+#     foreach ($file in $filesToCopy) {
+#         [System.IO.Fileinfo]$DestinationFilePath = $file.DestFileName
+#         [String]$DestinationDir = $DestinationFilePath.DirectoryName
+#         if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
+#             new-item -Path $DestinationDir -ItemType Directory #-Verbose
+#         }
+#     }
+# }
+
+# createfolders($filesToCopy)
+function copyFileInfo ([PSCustomObject]$file) {
+    [System.IO.FileInfo]$CopyFile = $file.SrcFileName
+    if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($file.DestFileName)))) {
+        $CopyFile.CopyTo($file.DestFileName, $true)
+    }
+}
+
+function isDivisible([int32]$numfiles, [int32]$divisor) {
+    if ($numfiles % $divisor -eq 0) {
+        return $true
+    }
+    else {
+        return $false
+    }
+}
+
+<# works but can be runspaced? #>
+# foreach ($file in $files){ #ToCopy) {
+#     $FileCount += 1
+#     copyFileInfo($file)
+#     <# would probably work if we weren't using a workflow #>
+#     if (isDivisible($FileCount, 1000) -eq $true) {
+#         write-host "Number of files: " + $FileCount
+#     }
+# }
+
+<# Runspaces version #>
+$Runspacepool = [runspacefactory]::CreateRunspacePool(1,$NumCopyThreads)
+$Runspacepool.Open()
+
+$Runspaces = foreach ($file in $filesToCopy) {
+    $PSInstance = [powershell]::Create().AddScript({
+        param($destFilename, $srcFileName)
+        [System.IO.Fileinfo]$DestinationFilePath = $DestFileName
+        [String]$DestinationDir = $DestinationFilePath.DirectoryName
+        if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
+            new-item -Path $DestinationDir -ItemType Directory #-Verbose
+        }
+        [System.IO.FileInfo]$CopyFile = $srcFileName
+        if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($destFileName)))) {
+            $CopyFile.CopyTo($destFileName, $true)
+        }
+    }).AddParameter('srcFileName', $file.SrcFileName).
+    AddParameter('destFileName', $file.DestFileName)
+    #Adding Powershell instance to RunspacePool
+    $PSInstance.RunspacePool = $Runspacepool
+
+    New-Object psobject -Property @{
+        instance = $PSInstance
+        IAResult = $PSInstance.BeginInvoke()
+        Argument = $file
+    }
+}
+
+while($Runspaces |Where-Object{-not $_.IAResult.IsCompleted}) {
+    Start-Sleep -Milliseconds 500
+}
+
+$Results = $Runspaces | ForEach-Object {
+    $Output = $_.Instance.EndInvoke($_.IAResult)
+    New-Object psobject -Property @{
+        File = $file
+        FileCopied = $Output
+    }
+}
+
+$Results | Format-Table
+
+$stopwatch.stop()
+
+# show what we did.
+[pscustomobject] @{
+    csv_output = $OutputCsv
+    total_files = $FileCount
+    time_taken = $stopwatch.elapsed
+}
