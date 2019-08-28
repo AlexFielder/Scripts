@@ -130,7 +130,7 @@ if ($CopyMethod -eq "Runspace") {
     }
 
     while($Runspaces |Where-Object{-not $_.IAResult.IsCompleted}) {
-        Start-Sleep -Milliseconds 500
+        Start-Sleep -Milliseconds 5
     }
 
     $Results = $Runspaces | ForEach-Object {
