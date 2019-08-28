@@ -11,8 +11,6 @@ e.g. C:\path\to\list\of\files\to\copy.txt
 default is 8 (but can be 100 if you want to stress the machine to maximum!)
 .PARAMETER LogName
 default is output.csv located in the same path as the Filelist
-# .PARAMETER CopyMethod
-default is Runspace, other possible options are: sync, BITS
 .EXAMPLE
 to run using defaults just call this file:
 .\CopyFilesToBackup
@@ -26,19 +24,11 @@ to run using anything else use this syntax:
 Param( 
     [String] $FileList = "C:\temp\copytest.csv", 
     [int] $NumCopyThreads = 8,
-    # [string] $CopyMethod = "Runspace",
     [String] $LogName
 ) 
 
 $stopwatch = [Diagnostics.Stopwatch]::StartNew()
 
-# . $PSScriptRoot\FileToCopy.ps1
-# Class fileToCopy {
-#     [String]$SrcFileName
-#     [String]$DestFileName
-# }
-# Import-Module .\Invoke-Async.ps1
-# Install-Module -Name ImportExcel
 $filesToCopy = New-Object "System.Collections.Generic.List[PSCustomObject]"
 $csv = Import-Csv $FileList
 
@@ -53,27 +43,6 @@ foreach($item in $csv)
 
 [int32]$FileCount = 0
 
-# if ($CopyMethod -eq "BITS") {
-# <# the following works but is REALLY slow for some reason. #>
-#     $results = foreach($file in $filesToCopy) {
-#         [System.IO.Fileinfo]$DestinationFilePath = $file.DestFileName
-#         [String]$DestinationDir = $DestinationFilePath.DirectoryName
-#         if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
-#             new-item -Path $DestinationDir -ItemType Directory
-#         }
-#         $job = Start-BitsTransfer -source $file.SrcFileName -Destination $file.DestFileName -Asynchronous
-#         # Copy-item -Path $file.SrcFileName -Destination $file.DestFileName
-#         $FileCount += 1
-#         while( ($job.JobState.ToString() -eq 'Transferring') -or ($job.JobState.ToString() -eq 'Connecting') )
-#         {
-#             Write-host $Job.JobState.ToString()
-#             Start-Sleep 3
-#         }
-#         Complete-BitsTransfer -BitsJob $job
-#     }
-# }
-
-# createfolders($filesToCopy)
 function copyFileInfo ([PSCustomObject]$file) {
     [System.IO.FileInfo]$CopyFile = $file.SrcFileName
     if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($file.DestFileName)))) {
@@ -114,9 +83,10 @@ function isDivisible([int32]$numfiles, [int32]$divisor) {
             if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
                 new-item -Path $DestinationDir -ItemType Directory #-Verbose
             }
-            [System.IO.FileInfo]$CopyFile = $srcFileName
+            # [System.IO.FileInfo]$CopyFile = $srcFileName
             if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($destFileName)))) {
-                $CopyFile.CopyTo($destFileName, $true)
+                copy-item -path $srcFileName -Destination $destFilename
+                # $CopyFile.CopyTo($destFileName, $true)
             }
         }).AddParameter('srcFileName', $file.SrcFileName).
         AddParameter('destFileName', $file.DestFileName)
