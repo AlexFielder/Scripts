@@ -37,7 +37,7 @@ $stopwatch = [Diagnostics.Stopwatch]::StartNew()
 #     [String]$DestFileName
 # }
 # Import-Module .\Invoke-Async.ps1
-Import-Module BitsTransfer
+Install-Module -Name ImportExcel
 $filesToCopy = New-Object "System.Collections.Generic.List[PSCustomObject]"
 $csv = Import-Csv $FileList
 
