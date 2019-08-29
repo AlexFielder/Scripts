@@ -29,17 +29,17 @@ Param(
 
 # $stopwatch = [Diagnostics.Stopwatch]::StartNew()
 
-$filesToCopy = New-Object "System.Collections.Generic.List[PSCustomObject]"
-$csv = Import-Csv $FileList
+# $filesToCopy = New-Object "System.Collections.Generic.List[PSCustomObject]"
+# $csv = Import-Csv $FileList
 
-foreach($item in $csv)
-{
-    $fileToCopy = [PSCustomObject]@{
-        SrcFileName = $item.SrcFileName
-        DestFileName = $item.DestFileName
-    }
-    $filesToCopy.add($fileToCopy)
-}
+# foreach($item in $csv)
+# {
+#     $fileToCopy = [PSCustomObject]@{
+#         SrcFileName = $item.SrcFileName
+#         DestFileName = $item.DestFileName
+#     }
+#     $filesToCopy.add($fileToCopy)
+# }
 
 # [int32]$FileCount = 0
 
@@ -59,6 +59,15 @@ function isDivisible([int32]$numfiles, [int32]$divisor) {
     }
 }
 
+# Import-Csv $FileList | Select-Object SrcFileName, DestFileName | Invoke-All{
+#     [System.IO.Fileinfo]$DestinationFilePath = $_.DestFileName
+#     [String]$DestinationDir = $DestinationFilePath.DirectoryName
+#     if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
+#         new-item -Path $DestinationDir -ItemType Directory -Verbose
+#     }
+#     copy-item -path $_.srcFileName -Destination $_.DestFileName -Verbose
+# }
+
 $filesPerBatch = 1000
 
 $files = Import-Csv $FileList | Select-Object SrcFileName, DestFileName
@@ -74,17 +83,18 @@ $jobs = while ($i -lt $files.Count) {
     $fileBatch = $files[$i..$j]
 
     $jobName = "Batch$batch"
-    Start-ThreadJob -Name $jobName -ThrottleLimit $NumCopyThreads -ScriptBlock {
-        param($files)
-        foreach ($file in $filesInBatch) {
-            [System.IO.Fileinfo]$DestinationFilePath = $file.DestFileName
+    Start-ThreadJob -Name $jobName -ThrottleLimit $NumCopyThreads -ArgumentList ($fileBatch) -ScriptBlock {
+        param($filesInBatch)
+        foreach ($f in $filesInBatch) {
+            [System.IO.Fileinfo]$DestinationFilePath = $f.DestFileName
             [String]$DestinationDir = $DestinationFilePath.DirectoryName
             if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
-                new-item -Path $DestinationDir -ItemType Directory #-Verbose
+                new-item -Path $DestinationDir -ItemType Directory -Verbose
             }
-            copy-item -path $file.srcFileName -Destination $file.destFilename
+            copy-item -path $f.srcFileName -Destination $f.DestFileName -Verbose
+            "Copied $($f.SrcFileName) to $($f.DestFileName)"
         }
-    } -ArgumentList ($fileBatch)
+    } 
 
     $batch += 1
     $i = $j + 1
@@ -100,7 +110,10 @@ Receive-Job -Job $jobs -Wait -AutoRemoveJob
 Write-Host "Total time lapsed: $([datetime]::UtcNow - $dtStart)"
 
 # Clean up the temp. file
+<# Don't do this!
 Remove-Item $FileList
+#>
+
 
 <# This works but is INCREDIBLY SLOW because it creates a thread per file
 # Create sample CSV file with 10 rows.
