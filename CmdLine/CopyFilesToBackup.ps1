@@ -79,34 +79,25 @@ $files = Import-Csv $FileList | Select-Object SrcFileName, DestFileName
 
 Write-Host 'CSV Data loaded...'
 
-# function ProcessFileAndHashToLog {
-#     param( [String]$LogFileName, [PSCustomObject]$FileColl)
-#     foreach ($f in $FileColl) {
-#         $mutex = New-object -typename 'Threading.Mutex' -ArgumentList $false, 'MyInterProcMutex'
-#         [System.IO.Fileinfo]$DestinationFilePath = $f.DestFileName
-#         [String]$DestinationDir = $DestinationFilePath.DirectoryName
-#         if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
-#             new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
-#         }
-#         copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
-        
-#         $srcHash = (Get-FileHash -Path $f.srcFileName -Algorithm SHA1).Hash #| Out-Null #could also use MD5 here but it needs testing
-#         if (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
-#             $destHash = (Get-FileHash -Path $f.destFileName -Algorithm SHA1).Hash #| Out-Null #could also use MD5 here but it needs testing
-#         } else {
-#             $destHash = $f.destFileName + " not found at location."
-#         }
-#         if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
-#             $info = $f.srcFileName + "," + $srcHash + "," + $f.destFileName + "," + $destHash
-#         }
-#         $mutex.WaitOne() | Out-Null
-#         $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
-#         Add-Content -Path $LogFileName -Value "$DateTime,$Info"
-#         $mutex.ReleaseMutex() | Out-Null
-#     }
-# }
+Write-Host 'Collecting unique Directory Names...'
 
+$allFolders = New-Object "System.Collections.Generic.List[PSCustomObject]"
 
+ForEach ($f in $files) {
+    [System.IO.Fileinfo]$DestinationFilePath = $f.DestFileName
+    [String]$DestinationDir = $DestinationFilePath.DirectoryName
+    $allFolders.add($DestinationDir)
+}
+
+$folders = $allFolders | get-unique
+
+Write-Host 'Creating Directories...'
+foreach($DestinationDir in $folders) {
+    if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
+        new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
+    }
+}
+Write-Host 'Finished Creating Directories...'
 $scriptBlock = {
     param(
         [PSCustomObject]$filesInBatch, 
@@ -115,11 +106,11 @@ $scriptBlock = {
             param( [String]$LogFileName, [PSCustomObject]$FileColl)
             foreach ($f in $FileColl) {
                 $mutex = New-object -typename 'Threading.Mutex' -ArgumentList $false, 'MyInterProcMutex'
-                [System.IO.Fileinfo]$DestinationFilePath = $f.DestFileName
-                [String]$DestinationDir = $DestinationFilePath.DirectoryName
-                if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
-                    new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
-                }
+                # [System.IO.Fileinfo]$DestinationFilePath = $f.DestFileName
+                # [String]$DestinationDir = $DestinationFilePath.DirectoryName
+                # if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
+                #     new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
+                # }
                 copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
                 
                 $srcHash = (Get-FileHash -Path $f.srcFileName -Algorithm SHA1).Hash #| Out-Null #could also use MD5 here but it needs testing
@@ -133,7 +124,7 @@ $scriptBlock = {
                 }
                 $mutex.WaitOne() | Out-Null
                 $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
-                Write-Host 'Writing to log file: '$LogFileName'...'
+                if ($DryRun) { Write-Host 'Writing to log file: '$LogFileName'...' }
                 Add-Content -Path $LogFileName -Value "$DateTime,$Info"
                 $mutex.ReleaseMutex() | Out-Null
             }
@@ -148,7 +139,7 @@ Write-Host 'Creating jobs...'
 if (-not ($DryRun)) {
     $jobs = while ($i -lt $files.Count) {
         $fileBatch = $files[$i..$j]
-        Start-ThreadJob -Name $jobName -ThrottleLimit $NumCopyThreads -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlock
+        Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlock #-ThrottleLimit $NumCopyThreads -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlock
         $batch += 1
         $i = $j + 1
         $j += $filesPerBatch
