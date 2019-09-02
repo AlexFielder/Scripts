@@ -30,7 +30,7 @@ to run using anything else use this syntax:
 Param( 
     [String] $FileList = "C:\temp\copytest.csv", 
     [int] $NumCopyThreads =75,
-    [String] $JobName,
+    [String] $JobName = "BatchCopyJob",
     [int] $FilesPerBatch = 1000,
     [String] $LogName,
     [Boolean] $DryRun = $false, #$true,
@@ -106,16 +106,12 @@ $scriptBlock = {
             param( [String]$LogFileName, [PSCustomObject]$FileColl)
             foreach ($f in $FileColl) {
                 $mutex = New-object -typename 'Threading.Mutex' -ArgumentList $false, 'MyInterProcMutex'
-                # [System.IO.Fileinfo]$DestinationFilePath = $f.DestFileName
-                # [String]$DestinationDir = $DestinationFilePath.DirectoryName
-                # if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
-                #     new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
-                # }
+                [string] $srcHash = ""
+                [string] $destHash = ""
                 copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
-                
-                $srcHash = (Get-FileHash -Path $f.srcFileName -Algorithm SHA1).Hash #| Out-Null #could also use MD5 here but it needs testing
+                $srcHash = (Get-FileHash -Path $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
                 if (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
-                    $destHash = (Get-FileHash -Path $f.destFileName -Algorithm SHA1).Hash #| Out-Null #could also use MD5 here but it needs testing
+                    $destHash = (Get-FileHash -Path $f.destFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
                 } else {
                     $destHash = $f.destFileName + " not found at location."
                 }
