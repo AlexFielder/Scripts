@@ -33,7 +33,7 @@ Param(
     [String] $JobName = "BatchCopyJob",
     [int] $FilesPerBatch = 1000,
     [String] $LogName,
-    [Boolean] $DryRun = $false, #$true,
+    [Boolean] $DryRun = $true, #$false,
     [int] $DryRunNum = 100
 ) 
 
@@ -108,15 +108,27 @@ $scriptBlock = {
                 $mutex = New-object -typename 'Threading.Mutex' -ArgumentList $false, 'MyInterProcMutex'
                 [string] $srcHash = ""
                 [string] $destHash = ""
-                copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
-                $srcHash = (Get-FileHash -Path $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
+                [string] $SrcInfo = ""
+                [string] $DestInfo = ""
+                if (Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName))) {
+                    copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
+                    $srcHash = (Get-FileHash -Path $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
+                    $SrcInfo = $f.srcFileName + "," + $srcHash
+                } else {
+                    $SrcInfo = $f.srcFileName + ",not found."
+                }
+                
+
                 if (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
                     $destHash = (Get-FileHash -Path $f.destFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
+                    $DestInfo = $f.destFileName + $destHash
                 } else {
-                    $destHash = $f.destFileName + " not found at location."
+                    $DestInfo = $f.destFileName + ",not found at location."
                 }
                 if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
-                    $info = $f.srcFileName + "," + $srcHash + "," + $f.destFileName + "," + $destHash
+                    $info = $SrcInfo + "," + $DestInfo
+                } else {
+                    
                 }
                 $mutex.WaitOne() | Out-Null
                 $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
