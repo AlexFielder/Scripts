@@ -33,7 +33,7 @@ Param(
     [String] $JobName = "BatchCopyJob",
     [int] $FilesPerBatch = 1000,
     [String] $LogName,
-    [Boolean] $DryRun = $true, #$false,
+    [Boolean] $DryRun = $false, #$true,
     [int] $DryRunNum = 100
 ) 
 
