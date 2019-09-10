@@ -21,6 +21,8 @@ The number of files to Dry Run. (Default is 100)
 Will check both the source and destination files exist and return a hash for each if so.
 .PARAMETER Delim
 Default is Pipe '|' because some files can have ',' in their name!
+.PARAMETER JobSpecificLogging
+Default is one log file, but in cases where we have >100,000 files we really should log to separate files I guess?
 .EXAMPLE
 to run using defaults just call this file:
 .\CopyFilesToBackup
@@ -40,7 +42,8 @@ Param(
     [Boolean] $DryRun = $false, #$true,
     [int] $DryRunNum = 100,
     [Boolean] $VerifyOnly = $false,
-    [String] $Delim = '|'    
+    [String] $Delim = '|',
+    [Boolean] $JobSpecificLogging = $false
 )
 #This would work as an input variable, but it appears there's a bug in Import-Csv which prevents a variable being passed to it in the -Delimiter switch. 
 # [String] $Delim = '|'
@@ -203,7 +206,7 @@ if (-not ($DryRun)) {
 } else {
     Write-Host 'Going in Dry...'
     $DummyFileBatch = $files[$i..$DryRunNum]
-    & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim
+    & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly 
     Write-Host 'That wasn''t so bad was it..?'
 }
 
