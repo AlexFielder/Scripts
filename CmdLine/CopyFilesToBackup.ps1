@@ -45,11 +45,10 @@ Param(
     [String] $Delim = '|',
     [Boolean] $JobSpecificLogging = $false
 )
-#This would work as an input variable, but it appears there's a bug in Import-Csv which prevents a variable being passed to it in the -Delimiter switch. 
-# [String] $Delim = '|'
 
-Write-Host 'Killing any processes that might interfere with log writing i.e. Notepad++'
-Write-Host 'If you do not pass a path for a log file, please ensure the folder: '$FileList' csv is located in has no existing *.log files'
+Write-Host 'Killing any processes that might interfere with log writing i.e. Notepad++' -ForegroundColor Red
+Write-Host 'If you DO NOT pass a path for a log file, please ensure the folder: '$FileList' csv is located in has no existing *.log files' -ForegroundColor Red -BackgroundColor Yellow
+Write-Host 'Failure to heed the above warning will result in PowerShell getting stuck in an infinite loop as the concatenated log will concatenate itself to itself' -ForegroundColor Red -BackgroundColor Yellow
 <# Copied from here: https://stackoverflow.com/a/20886446/572634 #>
 Function pause ($message)
 {
