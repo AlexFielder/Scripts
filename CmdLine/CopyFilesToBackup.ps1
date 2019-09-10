@@ -104,9 +104,9 @@ function createLog {
         $LogDirectory.Value = $CsvPath.DirectoryName
         [string]$LognameBaseName = $CsvPath.BaseName
         if ($JobNum -eq 0) {
-        $ThisLog = $LogDirectory + "\" + $LognameBaseName + ".log"
+        $ThisLog = $LogDirectory.Value + "\" + $LognameBaseName + ".log"
         } else {
-            $ThisLog = $LogDirectory + "\" + $LognameBaseName + "-$JobNum.log"
+            $ThisLog = $LogDirectory.Value + "\" + $LognameBaseName + "-$JobNum.log"
         }
         if (-not (CreateFile($ThisLog)) ) { 
             write-host "Unable to create log, exiting now!"
@@ -229,7 +229,7 @@ if (-not ($DryRun)) {
         & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly
     } else {
         $batch = 1
-        $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$filter)
+        $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
         Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
         & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly
     }
@@ -239,6 +239,7 @@ if (-not ($DryRun)) {
 if ($JobSpecificLogging) {
     Write-Host "Concatenating log files into one; One moment please..."
     <# copied from here: https://sites.pstcc.edu/elearn/instructional-technology/combine-csv-files-with-windows-10-powershell/ #>
+    [String] $ConcatenatedLog = createLog -ThisLog "$LogDirectory\Concatenated.log"
     Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv | Export-Csv $ConcatenatedLog -NoTypeInformation -Append
     Write-Host "Concatenated log file = $ConcatenatedLog"
 }
