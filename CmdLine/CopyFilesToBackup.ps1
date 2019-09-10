@@ -45,7 +45,13 @@ Param(
     [String] $Delim = '|',
     [Boolean] $JobSpecificLogging = $false
 )
+<# storing and then disabling important Windows Defender settings  - not sure if this will work on customer machines so needs testing with -DryRun setting #>
+Write-Host 'Storing Windows Defender settings so we can turn them back on afterwards'
+if (-not (Get-MpPreference -Disablerealtimemonitoring -eq 1)) {
+    Set-MpPreference -DisableRealtimeMonitoring 1
+}
 
+<# writing out warnings to the user otherwise we end up in an infinite loop #>
 Write-Host 'Killing any processes that might interfere with log writing i.e. Notepad++' -ForegroundColor Red
 Write-Host 'If you DO NOT pass a path for a log file, please ensure the folder: '$FileList' csv is located in has no existing *.log files' -ForegroundColor Red -BackgroundColor Yellow
 Write-Host 'Failure to heed the above warning will result in PowerShell getting stuck in an infinite loop as the concatenated log will concatenate itself to itself' -ForegroundColor Red -BackgroundColor Yellow
@@ -239,7 +245,11 @@ if ($JobSpecificLogging) {
     Write-Host "Concatenating log files into one; One moment please..."
     <# copied from here: https://sites.pstcc.edu/elearn/instructional-technology/combine-csv-files-with-windows-10-powershell/ #>
     [String] $ConcatenatedLog = createLog -ThisLog "$LogDirectory\Concatenated.log"
-    Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv | Export-Csv $ConcatenatedLog -NoTypeInformation -Append
+    Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Export-Csv $ConcatenatedLog -NoTypeInformation -Append
     Write-Host "Concatenated log file = $ConcatenatedLog"
+}
+Write-Host 'Re-enabling Windows Defender Setting(s) if we modified them'
+if (-not (Get-MpPreference -Disablerealtimemonitoring -eq 0)) {
+    Set-MpPreference -DisableRealtimeMonitoring 0
 }
 Write-Host "Total time lapsed: $([datetime]::UtcNow - $dtStart)"
