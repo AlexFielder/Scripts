@@ -34,10 +34,44 @@ Param(
     [int] $FilesPerBatch = 1000,
     [String] $LogName,
     [Boolean] $DryRun = $false, #$true,
-    [int] $DryRunNum = 100
+    [int] $DryRunNum = 100,
+    [Boolean] $VerifyOnly = $false,
+    [String] $Delim = ','
 ) 
 
+Write-Host 'Killing any processes that might interfere with log writing i.e. Notepad++'
 
+<# Copied from here: https://stackoverflow.com/a/20886446/572634 #>
+Function pause ($message)
+{
+    # Check if running VsCode  #Powershell ISE
+    if ($psEditor) #($psISE)
+    {
+        Add-Type -AssemblyName System.Windows.Forms
+        [System.Windows.Forms.MessageBox]::Show("$message")
+    }
+    else
+    {
+        Write-Host -NoNewLine "$message";
+        $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
+    }
+}
+
+pause('Press any key to continue...')
+
+<# Copied from here: https://stackoverflow.com/a/28482050/572634 #>
+# get Notepad++ process
+$Notepadplusplus = Get-Process Notepad++ -ErrorAction SilentlyContinue
+if ($Notepadplusplus) {
+  # try gracefully first
+  $Notepadplusplus.CloseMainWindow()
+  # kill after five seconds
+  Start-Sleep 5
+  if (!$Notepadplusplus.HasExited) {
+    $Notepadplusplus | Stop-Process -Force
+  }
+}
+Remove-Variable Notepadplusplus
 
 Write-Host 'Creating log file if it does not exist...'
 
@@ -71,11 +105,11 @@ else {
     }
 }
 
-Add-Content -Path $LogName -Value "[INFO],[Src Filename],[Src Hash],[Dest Filename],[Dest Hash]"
+Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
 
 Write-Host 'Loading CSV data into memory...'
 
-$files = Import-Csv $FileList | Select-Object SrcFileName, DestFileName
+$files = Import-Csv $FileList -Delimiter $Delim | Select-Object SrcFileName, DestFileName
 
 Write-Host 'CSV Data loaded...'
 
@@ -101,9 +135,11 @@ Write-Host 'Finished Creating Directories...'
 $scriptBlock = {
     param(
         [PSCustomObject]$filesInBatch, 
-        [String]$LogFileName)
+        [String]$LogFileName,
+        [Boolean]$VerifyOnly,
+        [String]$Delim)
         function ProcessFileAndHashToLog {
-            param( [String]$LogFileName, [PSCustomObject]$FileColl)
+            param( [String]$LogFileName, [PSCustomObject]$FileColl, [Boolean] $VerifyOnly, [String] $Delim)
             foreach ($f in $FileColl) {
                 $mutex = New-object -typename 'Threading.Mutex' -ArgumentList $false, 'MyInterProcMutex'
                 [string] $srcHash = ""
@@ -111,33 +147,35 @@ $scriptBlock = {
                 [string] $SrcInfo = ""
                 [string] $DestInfo = ""
                 if (Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName))) {
-                    copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
+                    if (-not $VerifyOnly) {
+                        copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
+                    }
                     $srcHash = (Get-FileHash -Path $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
-                    $SrcInfo = $f.srcFileName + "," + $srcHash
+                    $SrcInfo = $f.srcFileName + $Delim + $srcHash
                 } else {
-                    $SrcInfo = $f.srcFileName + ",not found."
+                    $SrcInfo = $f.srcFileName + $Delim + "not found."
                 }
                 
 
                 if (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
                     $destHash = (Get-FileHash -Path $f.destFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
-                    $DestInfo = $f.destFileName + $destHash
+                    $DestInfo = $f.destFileName + $Delim + $destHash
                 } else {
                     $DestInfo = $f.destFileName + ",not found at location."
                 }
                 if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
-                    $info = $SrcInfo + "," + $DestInfo
+                    $info = $SrcInfo + $Delim + $DestInfo
                 } else {
                     
                 }
                 $mutex.WaitOne() | Out-Null
                 $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
                 if ($DryRun) { Write-Host 'Writing to log file: '$LogFileName'...' }
-                Add-Content -Path $LogFileName -Value "$DateTime,$Info"
+                Add-Content -Path $LogFileName -Value "$DateTime$Delim$Info"
                 $mutex.ReleaseMutex() | Out-Null
             }
         }
-        ProcessFileAndHashToLog -LogFileName $LogFileName -FileColl $filesInBatch
+        ProcessFileAndHashToLog -LogFileName $LogFileName -FileColl $filesInBatch -VerifyOnly $VerifyOnly -Delim $Delim
 }
 
 $i = 0
@@ -147,7 +185,7 @@ Write-Host 'Creating jobs...'
 if (-not ($DryRun)) {
     $jobs = while ($i -lt $files.Count) {
         $fileBatch = $files[$i..$j]
-        Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlock #-ThrottleLimit $NumCopyThreads -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlock
+        Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock #-ThrottleLimit $NumCopyThreads -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlock
         $batch += 1
         $i = $j + 1
         $j += $filesPerBatch
@@ -159,7 +197,7 @@ if (-not ($DryRun)) {
 } else {
     Write-Host 'Going in Dry...'
     $DummyFileBatch = $files[$i..$DryRunNum]
-    & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName
+    & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim
     Write-Host 'That wasn''t so bad was it..?'
 }
 
