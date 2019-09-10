@@ -208,9 +208,9 @@ if (-not ($DryRun)) {
     $jobs = while ($i -lt $files.Count) {
         $fileBatch = $files[$i..$j]
         if (-not $JobSpecificLogging) {
-            Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock #-ThrottleLimit $NumCopyThreads -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlock
+            Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock -ThrottleLimit $NumCopyThreads #-ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlock
         } else {
-            $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$filter)
+            $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
             Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
             Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock   
         }
