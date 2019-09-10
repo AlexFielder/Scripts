@@ -47,7 +47,7 @@ Param(
 )
 <# storing and then disabling important Windows Defender settings  - not sure if this will work on customer machines so needs testing with -DryRun setting #>
 Write-Host 'Storing Windows Defender settings so we can turn them back on afterwards'
-if (-not (Get-MpPreference -Disablerealtimemonitoring -eq 1)) {
+if (-not ((Get-MpPreference | Format-List DisableRealtimeMonitoring) -eq 1)) {
     Set-MpPreference -DisableRealtimeMonitoring 1
 }
 
@@ -249,7 +249,7 @@ if ($JobSpecificLogging) {
     Write-Host "Concatenated log file = $ConcatenatedLog"
 }
 Write-Host 'Re-enabling Windows Defender Setting(s) if we modified them'
-if (-not (Get-MpPreference -Disablerealtimemonitoring -eq 0)) {
+if (-not ((Get-MpPreference | Format-List DisableRealtimeMonitoring) -eq 0)) {
     Set-MpPreference -DisableRealtimeMonitoring 0
 }
 Write-Host "Total time lapsed: $([datetime]::UtcNow - $dtStart)"
