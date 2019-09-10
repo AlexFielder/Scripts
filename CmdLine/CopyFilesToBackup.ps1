@@ -49,7 +49,7 @@ Param(
 # [String] $Delim = '|'
 
 Write-Host 'Killing any processes that might interfere with log writing i.e. Notepad++'
-
+Write-Host 'If you do not pass a path for a log file, please ensure the folder: '$FileList' csv is located in has no existing *.log files'
 <# Copied from here: https://stackoverflow.com/a/20886446/572634 #>
 Function pause ($message)
 {
@@ -96,7 +96,7 @@ function CreateFile([string]$filepath) {
 }
 
 $dtStart = [datetime]::UtcNow
-
+[String] $LogDirectory = ""
 function createLog {
     param([String]$ThisLog, [string] $FileListPath, [int] $JobNum, [Ref]$LogDirectory) 
     if ($ThisLog -eq "") {
@@ -122,7 +122,7 @@ function createLog {
     return $ThisLog
 }
 if (-not $JobSpecificLogging) {
-    $LogName = createLog -ThisLog $LogName -FileListPath $FileList
+    $LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory)
     Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
 }
 
@@ -202,7 +202,7 @@ $scriptBlock = {
 $i = 0
 $j = $filesPerBatch - 1
 $batch = 1
-[String] $LogDirectory = ""
+
 Write-Host 'Creating jobs...'
 if (-not ($DryRun)) {
     $jobs = while ($i -lt $files.Count) {
