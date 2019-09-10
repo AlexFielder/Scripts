@@ -97,24 +97,36 @@ function CreateFile([string]$filepath) {
 
 $dtStart = [datetime]::UtcNow
 
-if ($LogName -eq "") {
-    [System.IO.Fileinfo]$CsvPath = $FileList
-    [String]$LogDirectory = $CsvPath.DirectoryName
-    [string]$LognameBaseName = $CsvPath.BaseName
-    $LogName = $LogDirectory + "\" + $LognameBaseName + ".log"
-    if (-not (CreateFile($LogName)) ) { 
-        write-host "Unable to create log, exiting now!"
-        Break
+function createLog {
+    param([String]$ThisLog, [string] $FileListPath, [int] $JobNum) 
+    if ($ThisLog -eq "") {
+        [System.IO.Fileinfo]$CsvPath = $FileListPath
+        [String]$LogDirectory = $CsvPath.DirectoryName
+        [string]$LognameBaseName = $CsvPath.BaseName
+        if ($JobNum -eq 0) {
+        $ThisLog = $LogDirectory + "\" + $LognameBaseName + ".log"
+        } else {
+            $ThisLog = $LogDirectory + "\" + $LognameBaseName + "-$JobNum.log"
+        }
+        if (-not (CreateFile($ThisLog)) ) { 
+            write-host "Unable to create log, exiting now!"
+            Break
+        }
     }
+    else {
+        if (-not (CreateFile($ThisLog)) ) { 
+            write-host "Unable to create log, exiting now!"
+            Break
+        }
+    }
+    return $ThisLog
 }
-else {
-    if (-not (CreateFile($LogName)) ) { 
-        write-host "Unable to create log, exiting now!"
-        Break
-    }
+if (-not $JobSpecificLogging) {
+    $LogName = createLog -ThisLog $LogName -FileListPath $FileList
+    Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
 }
 
-Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
+
 
 Write-Host 'Loading CSV data into memory...'
 
@@ -194,8 +206,14 @@ Write-Host 'Creating jobs...'
 if (-not ($DryRun)) {
     $jobs = while ($i -lt $files.Count) {
         $fileBatch = $files[$i..$j]
-        Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock #-ThrottleLimit $NumCopyThreads -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlock
-        $batch += 1
+        if (-not $JobSpecificLogging) {
+            Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock #-ThrottleLimit $NumCopyThreads -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlock
+        } else {
+            $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch
+            Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
+            Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock   
+        }
+        $batch = $batch + 1
         $i = $j + 1
         $j += $filesPerBatch
         if ($i -gt $files.Count) {$i = $files.Count}
@@ -206,7 +224,15 @@ if (-not ($DryRun)) {
 } else {
     Write-Host 'Going in Dry...'
     $DummyFileBatch = $files[$i..$DryRunNum]
-    & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly 
+    if (-not $JobSpecificLogging) {
+        & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly
+    } else {
+        $batch = 1
+        $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch
+        Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
+        & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly
+    }
+
     Write-Host 'That wasn''t so bad was it..?'
 }
 
