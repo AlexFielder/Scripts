@@ -98,10 +98,10 @@ function CreateFile([string]$filepath) {
 $dtStart = [datetime]::UtcNow
 
 function createLog {
-    param([String]$ThisLog, [string] $FileListPath, [int] $JobNum) 
+    param([String]$ThisLog, [string] $FileListPath, [int] $JobNum, [Ref]$LogDirectory) 
     if ($ThisLog -eq "") {
         [System.IO.Fileinfo]$CsvPath = $FileListPath
-        [String]$LogDirectory = $CsvPath.DirectoryName
+        $LogDirectory.Value = $CsvPath.DirectoryName
         [string]$LognameBaseName = $CsvPath.BaseName
         if ($JobNum -eq 0) {
         $ThisLog = $LogDirectory + "\" + $LognameBaseName + ".log"
@@ -202,6 +202,7 @@ $scriptBlock = {
 $i = 0
 $j = $filesPerBatch - 1
 $batch = 1
+[String] $LogDirectory = ""
 Write-Host 'Creating jobs...'
 if (-not ($DryRun)) {
     $jobs = while ($i -lt $files.Count) {
@@ -209,7 +210,7 @@ if (-not ($DryRun)) {
         if (-not $JobSpecificLogging) {
             Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock #-ThrottleLimit $NumCopyThreads -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlock
         } else {
-            $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch
+            $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$filter)
             Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
             Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock   
         }
@@ -228,12 +229,17 @@ if (-not ($DryRun)) {
         & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly
     } else {
         $batch = 1
-        $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch
+        $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$filter)
         Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
         & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly
     }
 
     Write-Host 'That wasn''t so bad was it..?'
 }
-
+if ($JobSpecificLogging) {
+    Write-Host "Concatenating log files into one; One moment please..."
+    <# copied from here: https://sites.pstcc.edu/elearn/instructional-technology/combine-csv-files-with-windows-10-powershell/ #>
+    Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv | Export-Csv $ConcatenatedLog -NoTypeInformation -Append
+    Write-Host "Concatenated log file = $ConcatenatedLog"
+}
 Write-Host "Total time lapsed: $([datetime]::UtcNow - $dtStart)"
