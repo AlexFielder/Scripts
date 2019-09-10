@@ -17,6 +17,10 @@ Desired log file output. Must include full or relative (.\blah) path. If blank, 
 Boolean value denoting whether we're testing this thing or not. (Default is $false)
 .PARAMETER DryRunNum
 The number of files to Dry Run. (Default is 100)
+.PARAMETER VerifyOnly
+Will check both the source and destination files exist and return a hash for each if so.
+.PARAMETER Delim
+Default is Pipe '|' because some files can have ',' in their name!
 .EXAMPLE
 to run using defaults just call this file:
 .\CopyFilesToBackup
@@ -36,8 +40,10 @@ Param(
     [Boolean] $DryRun = $false, #$true,
     [int] $DryRunNum = 100,
     [Boolean] $VerifyOnly = $false,
-    [String] $Delim = ','
-) 
+    [String] $Delim = '|'    
+)
+#This would work as an input variable, but it appears there's a bug in Import-Csv which prevents a variable being passed to it in the -Delimiter switch. 
+# [String] $Delim = '|'
 
 Write-Host 'Killing any processes that might interfere with log writing i.e. Notepad++'
 
@@ -109,7 +115,7 @@ Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$De
 
 Write-Host 'Loading CSV data into memory...'
 
-$files = Import-Csv $FileList -Delimiter $Delim | Select-Object SrcFileName, DestFileName
+$files = Import-Csv -path $FileList -Delimiter $Delim | Select-Object SrcFileName, DestFileName
 
 Write-Host 'CSV Data loaded...'
 
