@@ -127,9 +127,15 @@ function createLog {
     }
     return $ThisLog
 }
-if (-not $JobSpecificLogging) {
+
+ # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
+
+if (-not ($JobSpecificLogging) -and -not ($CreateFoldersOnly)) {
     $LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory)
     Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
+} elseif ($CreateFoldersOnly) {
+    $LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory)
+    Add-Content -Path $LogName -Value "[INFO]$Delim[Folder]"
 }
 
 
@@ -157,8 +163,14 @@ Write-Host 'Creating Directories...'
 foreach($DestinationDir in $folders) {
     if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
         new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
+        if (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir))) {
+            Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delimcreated."
+        } else {
+            Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delimnot created."
+        }
     }
 }
+
 Write-Host 'Finished Creating Directories...'
 
 if ($CreateFoldersOnly) {
