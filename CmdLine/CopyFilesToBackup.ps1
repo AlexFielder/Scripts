@@ -133,13 +133,14 @@ function createLog {
 
  # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
 
-if (-not ($JobSpecificLogging) -and -not ($CreateFoldersOnly)) {
-    $LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory)
-    Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
-} elseif ($CreateFoldersOnly) {
-    $LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory)
-    Add-Content -Path $LogName -Value "[INFO]$Delim[Folder]"
-}
+# if (-not ($JobSpecificLogging) -and -not ($CreateFoldersOnly)) {
+#     $LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory)
+#     Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
+# } else
+#if ($CreateFoldersOnly) {
+$LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory)
+Add-Content -Path $LogName -Value "[INFO]$Delim[Folder]"
+#}
 
 
 
@@ -180,9 +181,9 @@ foreach($DestinationDir in $folders) {
 
 Write-Host 'Finished Creating Directories...'
 
-if ($CreateFoldersOnly) {
-    Break
-}
+# if ($CreateFoldersOnly) {
+#     Break
+# }
 
 $scriptBlock = {
     param(
@@ -233,6 +234,7 @@ $scriptBlock = {
 $i = 0
 $j = $filesPerBatch - 1
 $batch = 1
+$LogName = ""
 
 Write-Host 'Creating jobs...'
 if (-not ($DryRun)) {
