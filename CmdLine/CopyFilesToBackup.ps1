@@ -154,7 +154,7 @@ $folders = $allFolders | get-unique
 Write-Host 'Creating Directories...'
 
 $LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory) -FileNameSeed "AllFolders"
-Add-Content -Path $LogName -Value "[INFO]$Delim[Folder]"
+Add-Content -Path $LogName -Value "[INFO]$Delim[Folder]$Delim[FolderCreated]"
 
 foreach($DestinationDir in $folders) {
     if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
