@@ -43,7 +43,8 @@ Param(
     [int] $DryRunNum = 100,
     [Boolean] $VerifyOnly = $false,
     [String] $Delim = '|',
-    [Boolean] $JobSpecificLogging = $false
+    [Boolean] $JobSpecificLogging = $false,
+    [Boolean] $CreateFoldersOnly = $false
 )
 <# storing and then disabling important Windows Defender settings  - not sure if this will work on customer machines so needs testing with -DryRun setting #>
 Write-Host 'Storing Windows Defender settings so we can turn them back on afterwards'
@@ -152,12 +153,18 @@ ForEach ($f in $files) {
 $folders = $allFolders | get-unique
 
 Write-Host 'Creating Directories...'
+
 foreach($DestinationDir in $folders) {
     if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
         new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
     }
 }
 Write-Host 'Finished Creating Directories...'
+
+if ($CreateFoldersOnly) {
+    Break
+}
+
 $scriptBlock = {
     param(
         [PSCustomObject]$filesInBatch, 
@@ -189,11 +196,11 @@ $scriptBlock = {
                 } else {
                     $DestInfo = $f.destFileName + ",not found at location."
                 }
-                if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
-                    $info = $SrcInfo + $Delim + $DestInfo
-                } else {
+                # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
+                $info = $SrcInfo + $Delim + $DestInfo
+                # } else {
                     
-                }
+                # }
                 $mutex.WaitOne() | Out-Null
                 $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
                 if ($DryRun) { Write-Host 'Writing to log file: '$LogFileName'...' }
