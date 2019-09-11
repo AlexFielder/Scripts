@@ -23,6 +23,8 @@ Will check both the source and destination files exist and return a hash for eac
 Default is Pipe '|' because some files can have ',' in their name!
 .PARAMETER JobSpecificLogging
 Default is one log file, but in cases where we have >100,000 files we really should log to separate files I guess?
+.PARAMETER CreateFoldersOnly
+Use this if you only want to create folders.
 .EXAMPLE
 to run using defaults just call this file:
 .\CopyFilesToBackup
@@ -34,7 +36,7 @@ to run using anything else use this syntax:
 
 [CmdletBinding()] 
 Param( 
-    [String] $FileList = "C:\temp\copytest.csv", 
+    [String] $FileList = "C:\temp\Osiris_copytest.csv", #C:\temp\copytest.csv", CopyFilesToBackup.ps1 -FileList C:\temp\Osiris_copytest.csv -CreateFoldersOnly $true
     [int] $NumCopyThreads =75,
     [String] $JobName = "BatchCopyJob",
     [int] $FilesPerBatch = 1000,
@@ -43,7 +45,7 @@ Param(
     [int] $DryRunNum = 100,
     [Boolean] $VerifyOnly = $false,
     [String] $Delim = '|',
-    [Boolean] $JobSpecificLogging = $false,
+    [Boolean] $JobSpecificLogging = $true,
     [Boolean] $CreateFoldersOnly = $false
 )
 <# storing and then disabling important Windows Defender settings  - not sure if this will work on customer machines so needs testing with -DryRun setting #>
@@ -106,6 +108,7 @@ $dtStart = [datetime]::UtcNow
 function createLog {
     param([String]$ThisLog, [string] $FileListPath, [int] $JobNum, [Ref]$LogDirectory) 
     if ($ThisLog -eq "") {
+        $LogDirectory = ""
         [System.IO.Fileinfo]$CsvPath = $FileListPath
         $LogDirectory.Value = $CsvPath.DirectoryName
         [string]$LognameBaseName = $CsvPath.BaseName
@@ -163,11 +166,15 @@ Write-Host 'Creating Directories...'
 foreach($DestinationDir in $folders) {
     if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
         new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
+        $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
         if (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir))) {
-            Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delimcreated."
+            Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$true"
         } else {
-            Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delimnot created."
+            Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$false"
         }
+    } else {
+        $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
+        Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$false"
     }
 }
 
