@@ -100,14 +100,18 @@ function CreateFile([string]$filepath) {
 $dtStart = [datetime]::UtcNow
 [String] $LogDirectory = ""
 function createLog {
-    param([String]$ThisLog, [string] $FileListPath, [int] $JobNum, [Ref]$LogDirectory) 
+    param([String]$ThisLog, [string] $FileListPath, [int] $JobNum, [Ref]$LogDirectory, [string]$FileNameSeed) 
     if ($ThisLog -eq "") {
         if ($null -eq $LogDirectory) { $LogDirectory = "" }
         [System.IO.Fileinfo]$CsvPath = $FileListPath
         $LogDirectory.Value = $CsvPath.DirectoryName
         [string]$LognameBaseName = $CsvPath.BaseName
         if ($JobNum -eq 0) {
-        $ThisLog = $LogDirectory.Value + "\" + $LognameBaseName + ".log"
+            if ($FileNameSeed -eq "") {
+                $ThisLog = $LogDirectory.Value + "\" + $LognameBaseName + ".log"
+            } else {
+                $ThisLog = $LogDirectory.Value + "\" + $FileNameSeed + ".log"
+            }
         } else {
             $ThisLog = $LogDirectory.Value + "\" + $LognameBaseName + "-$JobNum.log"
         }
@@ -145,7 +149,7 @@ $folders = $allFolders | get-unique
 
 Write-Host 'Creating Directories...'
 
-$LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory)
+$LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory) -FileNameSeed "AllFolders"
 Add-Content -Path $LogName -Value "[INFO]$Delim[Folder]"
 
 foreach($DestinationDir in $folders) {
