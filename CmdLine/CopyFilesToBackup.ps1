@@ -21,10 +21,6 @@ The number of files to Dry Run. (Default is 100)
 Will check both the source and destination files exist and return a hash for each if so.
 .PARAMETER Delim
 Default is Pipe '|' because some files can have ',' in their name!
-.PARAMETER JobSpecificLogging
-Default is one log file, but in cases where we have >100,000 files we really should log to separate files I guess?
-.PARAMETER CreateFoldersOnly
-Use this if you only want to create folders.
 .EXAMPLE
 to run using defaults just call this file:
 .\CopyFilesToBackup
@@ -44,9 +40,7 @@ Param(
     [Boolean] $DryRun = $false, #$true,
     [int] $DryRunNum = 100,
     [Boolean] $VerifyOnly = $false,
-    [String] $Delim = '|',
-    [Boolean] $JobSpecificLogging = $true,
-    [Boolean] $CreateFoldersOnly = $false
+    [String] $Delim = '|'
 )
 <# storing and then disabling important Windows Defender settings  - not sure if this will work on customer machines so needs testing with -DryRun setting #>
 Write-Host 'Storing Windows Defender settings so we can turn them back on afterwards'
@@ -108,7 +102,7 @@ $dtStart = [datetime]::UtcNow
 function createLog {
     param([String]$ThisLog, [string] $FileListPath, [int] $JobNum, [Ref]$LogDirectory) 
     if ($ThisLog -eq "") {
-        $LogDirectory = ""
+        if ($null -eq $LogDirectory) { $LogDirectory = "" }
         [System.IO.Fileinfo]$CsvPath = $FileListPath
         $LogDirectory.Value = $CsvPath.DirectoryName
         [string]$LognameBaseName = $CsvPath.BaseName
@@ -131,19 +125,6 @@ function createLog {
     return $ThisLog
 }
 
- # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
-
-# if (-not ($JobSpecificLogging) -and -not ($CreateFoldersOnly)) {
-#     $LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory)
-#     Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
-# } else
-#if ($CreateFoldersOnly) {
-$LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory)
-Add-Content -Path $LogName -Value "[INFO]$Delim[Folder]"
-#}
-
-
-
 Write-Host 'Loading CSV data into memory...'
 
 $files = Import-Csv -path $FileList -Delimiter $Delim | Select-Object SrcFileName, DestFileName
@@ -164,6 +145,9 @@ $folders = $allFolders | get-unique
 
 Write-Host 'Creating Directories...'
 
+$LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory)
+Add-Content -Path $LogName -Value "[INFO]$Delim[Folder]"
+
 foreach($DestinationDir in $folders) {
     if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
         new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
@@ -179,11 +163,7 @@ foreach($DestinationDir in $folders) {
     }
 }
 
-Write-Host 'Finished Creating Directories...'
-
-# if ($CreateFoldersOnly) {
-#     Break
-# }
+Write-Host 'Finished Creating Directories and logging to '$LogName
 
 $scriptBlock = {
     param(
@@ -240,13 +220,10 @@ Write-Host 'Creating jobs...'
 if (-not ($DryRun)) {
     $jobs = while ($i -lt $files.Count) {
         $fileBatch = $files[$i..$j]
-        if (-not $JobSpecificLogging) {
-            Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock -ThrottleLimit $NumCopyThreads #-ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlock
-        } else {
-            $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
-            Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
-            Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock   
-        }
+        $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
+        Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
+        Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock   
+
         $batch = $batch + 1
         $i = $j + 1
         $j += $filesPerBatch
@@ -258,24 +235,19 @@ if (-not ($DryRun)) {
 } else {
     Write-Host 'Going in Dry...'
     $DummyFileBatch = $files[$i..$DryRunNum]
-    if (-not $JobSpecificLogging) {
-        & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly
-    } else {
-        $batch = 1
-        $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
-        Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
-        & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly
-    }
-
+    $batch = 1
+    $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
+    Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
+    & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly
     Write-Host 'That wasn''t so bad was it..?'
 }
-if ($JobSpecificLogging) {
-    Write-Host "Concatenating log files into one; One moment please..."
-    <# copied from here: https://sites.pstcc.edu/elearn/instructional-technology/combine-csv-files-with-windows-10-powershell/ #>
-    [String] $ConcatenatedLog = createLog -ThisLog "$LogDirectory\Concatenated.log"
-    Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Export-Csv $ConcatenatedLog -NoTypeInformation -Append
-    Write-Host "Concatenated log file = $ConcatenatedLog"
-}
+
+Write-Host "Concatenating log files into one; One moment please..."
+<# copied from here: https://sites.pstcc.edu/elearn/instructional-technology/combine-csv-files-with-windows-10-powershell/ #>
+[String] $ConcatenatedLog = createLog -ThisLog "$LogDirectory\Concatenated.log"
+Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Export-Csv $ConcatenatedLog -NoTypeInformation -Append
+Write-Host "Concatenated log file = $ConcatenatedLog"
+
 Write-Host 'Re-enabling Windows Defender Setting(s) if we modified them'
 if (-not ((Get-MpPreference | Format-List DisableRealtimeMonitoring) -eq 0)) {
     Set-MpPreference -DisableRealtimeMonitoring 0
