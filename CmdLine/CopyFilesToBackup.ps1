@@ -113,7 +113,11 @@ function createLog {
                 $ThisLog = $LogDirectory.Value + "\" + $FileNameSeed + ".log"
             }
         } else {
-            $ThisLog = $LogDirectory.Value + "\" + $LognameBaseName + "-$JobNum.log"
+            if ($FileNameSeed -eq "") {
+                $ThisLog = $LogDirectory.Value + "\" + $LognameBaseName + "-$JobNum.log"
+            } else {
+                $ThisLog = $LogDirectory.Value + "\" + $FileNameSeed + "-$JobNum.log"
+            }
         }
         if (-not (CreateFile($ThisLog)) ) { 
             write-host "Unable to create log, exiting now!"
