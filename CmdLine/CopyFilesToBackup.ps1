@@ -110,13 +110,13 @@ function createLog {
             if ($FileNameSeed -eq "") {
                 $ThisLog = $LogDirectory.Value + "\" + $LognameBaseName + ".log"
             } else {
-                $ThisLog = $LogDirectory.Value + "\" + $FileNameSeed + ".log"
+                $ThisLog = $LogDirectory.Value + "\" + $FileNameSeed + ".txt"
             }
         } else {
             if ($FileNameSeed -eq "") {
                 $ThisLog = $LogDirectory.Value + "\" + $LognameBaseName + "-$JobNum.log"
             } else {
-                $ThisLog = $LogDirectory.Value + "\" + $FileNameSeed + "-$JobNum.log"
+                $ThisLog = $LogDirectory.Value + "\" + $FileNameSeed + "-$JobNum.txt"
             }
         }
         if (-not (CreateFile($ThisLog)) ) { 
@@ -253,7 +253,7 @@ if (-not ($DryRun)) {
 Write-Host "Concatenating log files into one; One moment please..."
 <# copied from here: https://sites.pstcc.edu/elearn/instructional-technology/combine-csv-files-with-windows-10-powershell/ #>
 [String] $ConcatenatedLog = createLog -ThisLog "$LogDirectory\Concatenated.log"
-Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Export-Csv $ConcatenatedLog -NoTypeInformation #-Append
+Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Export-Csv $ConcatenatedLog -NoTypeInformation -Append
 Write-Host "Concatenated log file = $ConcatenatedLog"
 
 Write-Host 'Re-enabling Windows Defender Setting(s) if we modified them'
