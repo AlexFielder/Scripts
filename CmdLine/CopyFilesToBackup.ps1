@@ -7,8 +7,8 @@ Get-Help .\<filename>.ps1 -examples
 Copys files from one path to another
 .PARAMETER FileList
 e.g. C:\path\to\list\of\files\to\copy.txt
-.PARAMETER NumCopyThreads
-default is 8 (but can be 100 if you want to stress the machine to maximum!)
+.PARAMETER NumConcurrentJobs
+default is 25 (but can be 100 if you want to stress the machine to maximum!)
 .PARAMETER FilesPerBatch
 default is 1000 this can be tweaked if performance becomes an issue because the Threading will HAMMER any network you run it on.
 .PARAMETER LogName
@@ -189,7 +189,9 @@ $scriptBlock = {
                 [string] $DestInfo = ""
                 if (Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName))) {
                     if (-not $VerifyOnly) {
-                        copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
+                        if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName)))) {
+                            copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
+                        }
                     }
                     $srcHash = (Get-FileHash -Path $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
                     $SrcInfo = $f.srcFileName + $Delim + $srcHash
