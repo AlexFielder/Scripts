@@ -33,7 +33,7 @@ to run using anything else use this syntax:
 [CmdletBinding()] 
 Param( 
     [String] $FileList = "C:\temp\Osiris_copytest.csv", #C:\temp\copytest.csv", CopyFilesToBackup.ps1 -FileList C:\temp\Osiris_copytest.csv -CreateFoldersOnly $true
-    [int] $NumCopyThreads =75,
+    [int] $NumConcurrentJobs =25,
     [String] $JobName = "BatchCopyJob",
     [int] $FilesPerBatch = 1000,
     [String] $LogName,
@@ -230,7 +230,7 @@ if (-not ($DryRun)) {
         $fileBatch = $files[$i..$j]
         $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
         Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
-        Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock  -ThrottleLimit $NumCopyThreads 
+        Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock  -ThrottleLimit $NumConcurrentJobs
 
         $batch = $batch + 1
         $i = $j + 1
