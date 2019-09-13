@@ -204,7 +204,7 @@ $scriptBlock = {
                     $destHash = (Get-FileHash -Path $f.destFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
                     $DestInfo = $f.destFileName + $Delim + $destHash
                 } else {
-                    $DestInfo = $f.destFileName + ",not found at location."
+                    $DestInfo = $f.destFileName + $Delim + "not found at location."
                 }
                 # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
                 $info = $SrcInfo + $Delim + $DestInfo
@@ -257,6 +257,7 @@ Write-Host "Concatenating log files into one; One moment please..."
 [String] $ConcatenatedLog = createLog -ThisLog "$LogDirectory\Concatenated.txt"
 <# this works but Export-Csv wraps everything in speech marks #>
 # Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Export-Csv $ConcatenatedLog -NoTypeInformation -Append
+<# copied from here originally: https://devblogs.microsoft.com/scripting/remove-unwanted-quotation-marks-from-csv-files-by-using-powershell/ #>
 Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter '|' | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8BOM
 Write-Host "Concatenated log file = $ConcatenatedLog"
 
