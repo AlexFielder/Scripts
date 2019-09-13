@@ -40,7 +40,8 @@ Param(
     [Boolean] $DryRun = $false, #$true,
     [int] $DryRunNum = 100,
     [Boolean] $VerifyOnly = $false,
-    [String] $Delim = '|'
+    [String] $Delim = '|',
+    [Boolean] $SkipFolderCreation = $false
 )
 <# storing and then disabling important Windows Defender settings  - not sure if this will work on customer machines so needs testing with -DryRun setting #>
 Write-Host 'Storing Windows Defender settings so we can turn them back on afterwards'
@@ -138,40 +139,44 @@ Write-Host 'Loading CSV data into memory...'
 $files = Import-Csv -path $FileList -Delimiter $Delim | Select-Object SrcFileName, DestFileName
 
 Write-Host 'CSV Data loaded...'
+if (-not($SkipFolderCreation)) {
+    Write-Host 'Collecting unique Directory Names...'
 
-Write-Host 'Collecting unique Directory Names...'
+    $allFolders = New-Object "System.Collections.Generic.List[PSCustomObject]"
 
-$allFolders = New-Object "System.Collections.Generic.List[PSCustomObject]"
-
-ForEach ($f in $files) {
-    [System.IO.Fileinfo]$DestinationFilePath = $f.DestFileName
-    [String]$DestinationDir = $DestinationFilePath.DirectoryName
-    $allFolders.add($DestinationDir)
-}
-
-$folders = $allFolders | get-unique
-
-Write-Host 'Creating Directories...'
-
-$LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory) -FileNameSeed "AllFolders"
-Add-Content -Path $LogName -Value "[INFO]$Delim[Folder]$Delim[FolderCreated]"
-
-foreach($DestinationDir in $folders) {
-    if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
-        new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
-        $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
-        if (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir))) {
-            Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$true"
-        } else {
-            Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$false"
-        }
-    } else {
-        $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
-        Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$false"
+    ForEach ($f in $files) {
+        [System.IO.Fileinfo]$DestinationFilePath = $f.DestFileName
+        [String]$DestinationDir = $DestinationFilePath.DirectoryName
+        $allFolders.add($DestinationDir)
     }
+
+    $folders = $allFolders | get-unique
+
+    Write-Host 'Creating Directories...'
+
+    $LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory) -FileNameSeed "AllFolders"
+    Add-Content -Path $LogName -Value "[INFO]$Delim[Folder]$Delim[FolderCreated]"
+
+    foreach($DestinationDir in $folders) {
+        if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
+            new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
+            $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
+            if (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir))) {
+                Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$true"
+            } else {
+                Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$false"
+            }
+        } else {
+            $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
+            Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$true"
+        }
+    }
+
+    Write-Host 'Finished Creating Directories and logging to '$LogName
+} else {
+    Write-Host 'Skipped folder creation as requested'
 }
 
-Write-Host 'Finished Creating Directories and logging to '$LogName
 
 $scriptBlock = {
     param(
