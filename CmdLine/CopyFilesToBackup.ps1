@@ -158,9 +158,12 @@ if (-not($SkipFolderCreation)) {
     Add-Content -Path $LogName -Value "[INFO]$Delim[Folder]$Delim[FolderCreated]"
 
     foreach($DestinationDir in $folders) {
+        $mutex = New-object -typename 'Threading.Mutex' -ArgumentList $false, 'MyInterProcMutex'
+        $mutex.WaitOne() | Out-Null
         if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
             new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
             $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
+
             if (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir))) {
                 Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$true"
             } else {
@@ -170,6 +173,7 @@ if (-not($SkipFolderCreation)) {
             $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
             Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$true"
         }
+        $mutex.ReleaseMutex() | Out-Null
     }
 
     Write-Host 'Finished Creating Directories and logging to '$LogName
