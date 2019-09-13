@@ -254,8 +254,10 @@ if (-not ($DryRun)) {
 
 Write-Host "Concatenating log files into one; One moment please..."
 <# copied from here: https://sites.pstcc.edu/elearn/instructional-technology/combine-csv-files-with-windows-10-powershell/ #>
-[String] $ConcatenatedLog = createLog -ThisLog "$LogDirectory\Concatenated.log"
-Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Export-Csv $ConcatenatedLog -NoTypeInformation -Append
+[String] $ConcatenatedLog = createLog -ThisLog "$LogDirectory\Concatenated.txt"
+<# this works but Export-Csv wraps everything in speech marks #>
+# Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Export-Csv $ConcatenatedLog -NoTypeInformation -Append
+Get-ChildItem c:\fso -Fi *.log | Where-Object {$_.basename -like ‘006?’} | Import-Csv -Delimiter '|' | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -fo -en UTF8BOM
 Write-Host "Concatenated log file = $ConcatenatedLog"
 
 Write-Host 'Re-enabling Windows Defender Setting(s) if we modified them'
