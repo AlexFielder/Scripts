@@ -21,6 +21,8 @@ The number of files to Dry Run. (Default is 100)
 Will check both the source and destination files exist and return a hash for each if so.
 .PARAMETER Delim
 Default is Pipe '|' because some files can have ',' in their name!
+.PARAMETER SkipFolderCreation
+Default is false.
 .EXAMPLE
 to run using defaults just call this file:
 .\CopyFilesToBackup
@@ -100,13 +102,14 @@ function CreateFile([string]$filepath) {
 
 $dtStart = [datetime]::UtcNow
 [String] $LogDirectory = ""
+[String] $LognameBaseName = ""
 function createLog {
-    param([String]$ThisLog, [string] $FileListPath, [int] $JobNum, [Ref]$LogDirectory, [string]$FileNameSeed) 
+    param([String]$ThisLog, [string] $FileListPath, [int] $JobNum, [Ref]$LogDirectory, [Ref]$LognameBaseName, [string]$FileNameSeed) 
     if ($ThisLog -eq "") {
         if ($null -eq $LogDirectory) { $LogDirectory = "" }
         [System.IO.Fileinfo]$CsvPath = $FileListPath
         $LogDirectory.Value = $CsvPath.DirectoryName
-        [string]$LognameBaseName = $CsvPath.BaseName
+        $LognameBaseName = $CsvPath.BaseName
         if ($JobNum -eq 0) {
             if ($FileNameSeed -eq "") {
                 $ThisLog = $LogDirectory.Value + "\" + $LognameBaseName + ".log"
@@ -267,7 +270,11 @@ Write-Host "Concatenating log files into one; One moment please..."
 <# this works but Export-Csv wraps everything in speech marks #>
 # Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Export-Csv $ConcatenatedLog -NoTypeInformation -Append
 <# copied from here originally: https://devblogs.microsoft.com/scripting/remove-unwanted-quotation-marks-from-csv-files-by-using-powershell/ #>
-Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter '|' | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8BOM
+#Original works but is indiscriminate
+# Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter '|' | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation -Delimiter $Delim | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8
+<# this next command ought to work but the 'Where-Object' doesn't work for some reason #>
+# Get-ChildItem -path $LogDirectory -Filter *.log | Where-Object {$_.basename -like ‘$LognameBaseName?’} |Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation -Delimiter $Delim | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8
+Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation -Delimiter $Delim | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8
 Write-Host "Concatenated log file = $ConcatenatedLog"
 
 Write-Host 'Re-enabling Windows Defender Setting(s) if we modified them'
