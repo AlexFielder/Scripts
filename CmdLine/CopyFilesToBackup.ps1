@@ -107,18 +107,19 @@ function createLog {
     param([String]$ThisLog, [string] $FileListPath, [int] $JobNum, [Ref]$LogDirectory, [Ref]$LognameBaseName, [string]$FileNameSeed) 
     if ($ThisLog -eq "") {
         if ($null -eq $LogDirectory) { $LogDirectory = "" }
+        if ($null -eq $LognameBaseName) { $LognameBaseName = "" }
         [System.IO.Fileinfo]$CsvPath = $FileListPath
         $LogDirectory.Value = $CsvPath.DirectoryName
-        $LognameBaseName = $CsvPath.BaseName
+        $LognameBaseName.Value = $CsvPath.BaseName
         if ($JobNum -eq 0) {
             if ($FileNameSeed -eq "") {
-                $ThisLog = $LogDirectory.Value + "\" + $LognameBaseName + ".log"
+                $ThisLog = $LogDirectory.Value + "\" + $LognameBaseName.Value + ".log"
             } else {
                 $ThisLog = $LogDirectory.Value + "\" + $FileNameSeed + ".txt"
             }
         } else {
             if ($FileNameSeed -eq "") {
-                $ThisLog = $LogDirectory.Value + "\" + $LognameBaseName + "-$JobNum.log"
+                $ThisLog = $LogDirectory.Value + "\" + $LognameBaseName.Value + "-$JobNum.log"
             } else {
                 $ThisLog = $LogDirectory.Value + "\" + $FileNameSeed + "-$JobNum.txt"
             }
@@ -157,7 +158,7 @@ if (-not($SkipFolderCreation)) {
 
     Write-Host 'Creating Directories...'
 
-    $LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory) -FileNameSeed "AllFolders"
+    $LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory) ([Ref]$LognameBaseName) -FileNameSeed "AllFolders"
     Add-Content -Path $LogName -Value "[INFO]$Delim[Folder]$Delim[FolderCreated]"
 
     foreach($DestinationDir in $folders) {
