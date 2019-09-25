@@ -189,11 +189,11 @@ if (-not($SkipFolderCreation)) {
         CreateBatchOfFolders -LogFileName $LogFileName -FolderColl $foldersInBatch
     }
 
-    Write-Host 'Creating Directories...'
-
+    # Write-Host 'Creating Folders...'
+    
+    $foldersPerBatch = $filesPerBatch
     $i = 0
     $j = $foldersPerBatch - 1
-    $foldersPerBatch = $filesPerBatch
     $batch = 1
     $LogName = ""
     
@@ -208,8 +208,8 @@ if (-not($SkipFolderCreation)) {
             $batch = $batch + 1
             $i = $j + 1
             $j += $foldersPerBatch
-            if ($i -gt $files.Count) {$i = $files.Count}
-            if ($j -gt $files.Count) {$j = $files.Count}
+            if ($i -gt $folders.Count) {$i = $folders.Count}
+            if ($j -gt $folders.Count) {$j = $folders.Count}
         }
         Write-Host "Waiting for $($jobs.Count) jobs to complete..."
         Receive-Job -Job $jobs -Wait -AutoRemoveJob
