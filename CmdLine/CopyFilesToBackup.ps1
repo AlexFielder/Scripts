@@ -156,29 +156,76 @@ if (-not($SkipFolderCreation)) {
 
     $folders = $allFolders | get-unique
 
+    $scriptBlockFolders = {
+        param(
+            [PSCustomObject]$foldersInBatch,
+            [String]$LogFileName
+        )
+
+        function CreateBatchOfFolders {
+            param(
+                [String]$LogFileName, 
+                [PSCustomObject]$FolderColl
+            )
+
+        }
+        CreateBatchOfFolders -LogFileName $LogFileName -FoldersInBatch
+    }
+
     Write-Host 'Creating Directories...'
 
-    $LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory) ([Ref]$LognameBaseName) -FileNameSeed "AllFolders"
-    Add-Content -Path $LogName -Value "[INFO]$Delim[Folder]$Delim[FolderCreated]"
-
-    foreach($DestinationDir in $folders) {
-        $mutex = New-object -typename 'Threading.Mutex' -ArgumentList $false, 'MyInterProcMutex'
-        $mutex.WaitOne() | Out-Null
-        if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
-            new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
-            $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
-
-            if (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir))) {
-                Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$true"
-            } else {
-                Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$false"
-            }
-        } else {
-            $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
-            Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$true"
+    $i = 0
+    $j = $foldersPerBatch - 1
+    $batch = 1
+    $LogName = ""
+    
+    Write-Host 'Creating Folder Jobs...'
+    if (-not ($DryRun)) {
+        $jobs = while ($i -lt $folders.Count) {
+            $fileBatch = $folders[$i..$j]
+            $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
+            Add-Content -Path $LogName -Value "[INFO]|[Folder]|[FolderCreated]"
+            Start-ThreadJob -Name 'Folders-'$jobName -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlockFolders  -ThrottleLimit $NumConcurrentJobs
+    
+            $batch = $batch + 1
+            $i = $j + 1
+            $j += $foldersPerBatch
+            if ($i -gt $files.Count) {$i = $files.Count}
+            if ($j -gt $files.Count) {$j = $files.Count}
         }
-        $mutex.ReleaseMutex() | Out-Null
+        Write-Host "Waiting for $($jobs.Count) jobs to complete..."
+        Receive-Job -Job $jobs -Wait -AutoRemoveJob
+    } else {
+        Write-Host 'Going in Dry...'
+        $DummyFolderBatch = $folders[$i..$DryRunNum]
+        $batch = 1
+        $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
+        Add-Content -Path $LogName -Value "[INFO]|[Folder]|[FolderCreated]"
+        & $scriptBlockFolders -filesInBatch $DummyFolderBatch -LogFileName $LogName
+        Write-Host 'That wasn''t so bad was it..?'
     }
+
+    # $LogName = createLog -ThisLog $LogName -FileListPath $FileList ([Ref]$LogDirectory) ([Ref]$LognameBaseName) -FileNameSeed "AllFolders"
+    # Add-Content -Path $LogName -Value "[INFO]$Delim[Folder]$Delim[FolderCreated]"
+
+    # foreach($DestinationDir in $folders) {
+    #     $mutex = New-object -typename 'Threading.Mutex' -ArgumentList $false, 'MyInterProcMutex'
+    #     $mutex.WaitOne() | Out-Null
+    #     if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
+    #         new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
+    #         $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
+
+    #         if (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir))) {
+    #             Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$true"
+    #         } else {
+    #             Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$false"
+    #         }
+    #     } else {
+    #         $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
+    #         Add-Content -Path $LogName -Value "$DateTime$Delim$DestinationDir$Delim$true"
+    #     }
+    #     $mutex.ReleaseMutex() | Out-Null
+    # }
 
     Write-Host 'Finished Creating Directories and logging to '$LogName
 } else {
