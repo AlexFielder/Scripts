@@ -167,15 +167,33 @@ if (-not($SkipFolderCreation)) {
                 [String]$LogFileName, 
                 [PSCustomObject]$FolderColl
             )
+            foreach($DestinationDir in $FolderColl) {
+                $mutex = New-object -typename 'Threading.Mutex' -ArgumentList $false, 'MyInterProcMutex'
+                $mutex.WaitOne() | Out-Null
+                if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
+                    new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
+                    $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
 
+                    if (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir))) {
+                        Add-Content -Path $LogFileName -Value "$DateTime$Delim$DestinationDir$Delim$true"
+                    } else {
+                        Add-Content -Path $LogFileName -Value "$DateTime$Delim$DestinationDir$Delim$false"
+                    }
+                } else {
+                    $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
+                    Add-Content -Path $LogFileName -Value "$DateTime$Delim$DestinationDir$Delim$true"
+                }
+                $mutex.ReleaseMutex() | Out-Null
+            }
         }
-        CreateBatchOfFolders -LogFileName $LogFileName -FoldersInBatch
+        CreateBatchOfFolders -LogFileName $LogFileName -FolderColl $foldersInBatch
     }
 
     Write-Host 'Creating Directories...'
 
     $i = 0
     $j = $foldersPerBatch - 1
+    $foldersPerBatch = $filesPerBatch
     $batch = 1
     $LogName = ""
     
