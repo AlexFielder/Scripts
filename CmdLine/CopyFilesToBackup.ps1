@@ -23,6 +23,8 @@ Will check both the source and destination files exist and return a hash for eac
 Default is Pipe '|' because some files can have ',' in their name!
 .PARAMETER SkipFolderCreation
 Default is false.
+.PARAMETER CreateFoldersOnly
+Default is false.
 .EXAMPLE
 to run using defaults just call this file:
 .\CopyFilesToBackup
@@ -43,7 +45,8 @@ Param(
     [int] $DryRunNum = 100,
     [Boolean] $VerifyOnly = $false,
     [String] $Delim = '|',
-    [Boolean] $SkipFolderCreation = $false
+    [Boolean] $SkipFolderCreation = $false,
+    [Boolean] $CreateFoldersOnly = $false
 )
 <# storing and then disabling important Windows Defender settings  - not sure if this will work on customer machines so needs testing with -DryRun setting #>
 Write-Host 'Storing Windows Defender settings so we can turn them back on afterwards'
@@ -250,7 +253,7 @@ if (-not($SkipFolderCreation)) {
     Write-Host 'Skipped folder creation as requested'
 }
 
-
+if(-not ($CreateFoldersOnly)) {
 $scriptBlock = {
     param(
         [PSCustomObject]$filesInBatch, 
@@ -342,7 +345,9 @@ Write-Host "Concatenating log files into one; One moment please..."
 # Get-ChildItem -path $LogDirectory -Filter *.log | Where-Object {$_.basename -like ‘$LognameBaseName?’} |Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation -Delimiter $Delim | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8
 Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation -Delimiter $Delim | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8
 Write-Host "Concatenated log file = $ConcatenatedLog"
-
+} else {
+    Write-Host 'Skipped file copy step as requested'
+}
 Write-Host 'Re-enabling Windows Defender Setting(s) if we modified them'
 if (-not ((Get-MpPreference | Format-List DisableRealtimeMonitoring) -eq 0)) {
     Set-MpPreference -DisableRealtimeMonitoring 0
