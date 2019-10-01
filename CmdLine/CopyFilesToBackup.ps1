@@ -254,97 +254,97 @@ if (-not($SkipFolderCreation)) {
 }
 
 if(-not ($CreateFoldersOnly)) {
-$scriptBlock = {
-    param(
-        [PSCustomObject]$filesInBatch, 
-        [String]$LogFileName,
-        [Boolean]$VerifyOnly,
-        [String]$Delim)
-        function ProcessFileAndHashToLog {
-            param( [String]$LogFileName, [PSCustomObject]$FileColl, [Boolean] $VerifyOnly, [String] $Delim)
-            foreach ($f in $FileColl) {
-                $mutex = New-object -typename 'Threading.Mutex' -ArgumentList $false, 'MyInterProcMutex'
-                [string] $srcHash = ""
-                [string] $destHash = ""
-                [string] $SrcInfo = ""
-                [string] $DestInfo = ""
-                if (Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName)) -and (-not ((Get-Item $f.srcFileName) -is [System.IO.DirectoryInfo]))) {
-                    if (-not $VerifyOnly) {
-                        if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName)))) {
-                            copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
+    $scriptBlock = {
+        param(
+            [PSCustomObject]$filesInBatch, 
+            [String]$LogFileName,
+            [Boolean]$VerifyOnly,
+            [String]$Delim)
+            function ProcessFileAndHashToLog {
+                param( [String]$LogFileName, [PSCustomObject]$FileColl, [Boolean] $VerifyOnly, [String] $Delim)
+                foreach ($f in $FileColl) {
+                    $mutex = New-object -typename 'Threading.Mutex' -ArgumentList $false, 'MyInterProcMutex'
+                    [string] $srcHash = ""
+                    [string] $destHash = ""
+                    [string] $SrcInfo = ""
+                    [string] $DestInfo = ""
+                    if (Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName)) -and (-not ((Get-Item $f.srcFileName) -is [System.IO.DirectoryInfo]))) {
+                        if (-not $VerifyOnly) {
+                            if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName)))) {
+                                copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
+                            }
                         }
+                        $srcHash = (Get-FileHash -Path $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
+                        $SrcInfo = $f.srcFileName + $Delim + $srcHash
+                    } else {
+                        $SrcInfo = $f.srcFileName + $Delim + "not found."
                     }
-                    $srcHash = (Get-FileHash -Path $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
-                    $SrcInfo = $f.srcFileName + $Delim + $srcHash
-                } else {
-                    $SrcInfo = $f.srcFileName + $Delim + "not found."
-                }
-                
-
-                if (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
-                    $destHash = (Get-FileHash -Path $f.destFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
-                    $DestInfo = $f.destFileName + $Delim + $destHash
-                } else {
-                    $DestInfo = $f.destFileName + $Delim + "not found at location."
-                }
-                # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
-                $info = $SrcInfo + $Delim + $DestInfo
-                # } else {
                     
-                # }
-                $mutex.WaitOne() | Out-Null
-                $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
-                if ($DryRun) { Write-Host 'Writing to log file: '$LogFileName'...' }
-                Add-Content -Path $LogFileName -Value "$DateTime$Delim$Info"
-                $mutex.ReleaseMutex() | Out-Null
+
+                    if (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
+                        $destHash = (Get-FileHash -Path $f.destFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
+                        $DestInfo = $f.destFileName + $Delim + $destHash
+                    } else {
+                        $DestInfo = $f.destFileName + $Delim + "not found at location."
+                    }
+                    # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
+                    $info = $SrcInfo + $Delim + $DestInfo
+                    # } else {
+                        
+                    # }
+                    $mutex.WaitOne() | Out-Null
+                    $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
+                    if ($DryRun) { Write-Host 'Writing to log file: '$LogFileName'...' }
+                    Add-Content -Path $LogFileName -Value "$DateTime$Delim$Info"
+                    $mutex.ReleaseMutex() | Out-Null
+                }
             }
-        }
-        ProcessFileAndHashToLog -LogFileName $LogFileName -FileColl $filesInBatch -VerifyOnly $VerifyOnly -Delim $Delim
-}
-
-$i = 0
-$j = $filesPerBatch - 1
-$batch = 1
-$LogName = ""
-
-Write-Host 'Creating jobs...'
-if (-not ($DryRun)) {
-    $jobs = while ($i -lt $files.Count) {
-        $fileBatch = $files[$i..$j]
-        $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
-        Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
-        Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock  -ThrottleLimit $NumConcurrentJobs
-
-        $batch = $batch + 1
-        $i = $j + 1
-        $j += $filesPerBatch
-        if ($i -gt $files.Count) {$i = $files.Count}
-        if ($j -gt $files.Count) {$j = $files.Count}
+            ProcessFileAndHashToLog -LogFileName $LogFileName -FileColl $filesInBatch -VerifyOnly $VerifyOnly -Delim $Delim
     }
-    Write-Host "Waiting for $($jobs.Count) jobs to complete..."
-    Receive-Job -Job $jobs -Wait -AutoRemoveJob
-} else {
-    Write-Host 'Going in Dry...'
-    $DummyFileBatch = $files[$i..$DryRunNum]
-    $batch = 1
-    $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
-    Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
-    & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly
-    Write-Host 'That wasn''t so bad was it..?'
-}
 
-Write-Host "Concatenating log files into one; One moment please..."
-<# copied from here: https://sites.pstcc.edu/elearn/instructional-technology/combine-csv-files-with-windows-10-powershell/ #>
-[String] $ConcatenatedLog = createLog -ThisLog "$LogDirectory\Concatenated.txt"
-<# this works but Export-Csv wraps everything in speech marks #>
-# Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Export-Csv $ConcatenatedLog -NoTypeInformation -Append
-<# copied from here originally: https://devblogs.microsoft.com/scripting/remove-unwanted-quotation-marks-from-csv-files-by-using-powershell/ #>
-#Original works but is indiscriminate
-# Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter '|' | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation -Delimiter $Delim | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8
-<# this next command ought to work but the 'Where-Object' doesn't work for some reason #>
-# Get-ChildItem -path $LogDirectory -Filter *.log | Where-Object {$_.basename -like ‘$LognameBaseName?’} |Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation -Delimiter $Delim | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8
-Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation -Delimiter $Delim | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8
-Write-Host "Concatenated log file = $ConcatenatedLog"
+    $i = 0
+    $j = $filesPerBatch - 1
+    $batch = 1
+    $LogName = ""
+
+    Write-Host 'Creating jobs...'
+    if (-not ($DryRun)) {
+        $jobs = while ($i -lt $files.Count) {
+            $fileBatch = $files[$i..$j]
+            $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
+            Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
+            Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock  -ThrottleLimit $NumConcurrentJobs
+
+            $batch = $batch + 1
+            $i = $j + 1
+            $j += $filesPerBatch
+            if ($i -gt $files.Count) {$i = $files.Count}
+            if ($j -gt $files.Count) {$j = $files.Count}
+        }
+        Write-Host "Waiting for $($jobs.Count) jobs to complete..."
+        Receive-Job -Job $jobs -Wait -AutoRemoveJob
+    } else {
+        Write-Host 'Going in Dry...'
+        $DummyFileBatch = $files[$i..$DryRunNum]
+        $batch = 1
+        $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
+        Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
+        & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly
+        Write-Host 'That wasn''t so bad was it..?'
+    }
+
+    Write-Host "Concatenating log files into one; One moment please..."
+    <# copied from here: https://sites.pstcc.edu/elearn/instructional-technology/combine-csv-files-with-windows-10-powershell/ #>
+    [String] $ConcatenatedLog = createLog -ThisLog "$LogDirectory\Concatenated.txt"
+    <# this works but Export-Csv wraps everything in speech marks #>
+    # Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Export-Csv $ConcatenatedLog -NoTypeInformation -Append
+    <# copied from here originally: https://devblogs.microsoft.com/scripting/remove-unwanted-quotation-marks-from-csv-files-by-using-powershell/ #>
+    #Original works but is indiscriminate
+    # Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter '|' | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation -Delimiter $Delim | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8
+    <# this next command ought to work but the 'Where-Object' doesn't work for some reason #>
+    # Get-ChildItem -path $LogDirectory -Filter *.log | Where-Object {$_.basename -like ‘$LognameBaseName?’} |Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation -Delimiter $Delim | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8
+    Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation -Delimiter $Delim | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8
+    Write-Host "Concatenated log file = $ConcatenatedLog"
 } else {
     Write-Host 'Skipped file copy step as requested'
 }
