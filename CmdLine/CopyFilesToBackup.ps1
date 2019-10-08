@@ -268,7 +268,7 @@ if(-not ($CreateFoldersOnly)) {
                     [string] $destHash = ""
                     [string] $SrcInfo = ""
                     [string] $DestInfo = ""
-                    if (Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName)) (-and -not ((Get-Item $f.srcFileName) -is [System.IO.DirectoryInfo]))) {
+                    if ((Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName))) -and (-not ((Get-Item $f.srcFileName) -is [System.IO.DirectoryInfo]))) {
                         if (-not $VerifyOnly) {
                             if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName)))) {
                                 copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
