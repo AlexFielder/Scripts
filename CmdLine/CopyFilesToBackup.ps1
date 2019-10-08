@@ -206,7 +206,7 @@ if (-not($SkipFolderCreation)) {
             $fileBatch = $folders[$i..$j]
             $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
             Add-Content -Path $LogName -Value "[INFO]|[Folder]|[FolderCreated]"
-            Start-ThreadJob -Name 'Folders-'$jobName -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlockFolders  -ThrottleLimit $NumConcurrentJobs
+            Start-ThreadJob -Name "Folders-$jobName" -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlockFolders  -ThrottleLimit $NumConcurrentJobs
     
             $batch = $batch + 1
             $i = $j + 1
@@ -268,7 +268,7 @@ if(-not ($CreateFoldersOnly)) {
                     [string] $destHash = ""
                     [string] $SrcInfo = ""
                     [string] $DestInfo = ""
-                    if (Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName)) -and (-not ((Get-Item $f.srcFileName) -is [System.IO.DirectoryInfo]))) {
+                    if (Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName)) (-and -not ((Get-Item $f.srcFileName) -is [System.IO.DirectoryInfo]))) {
                         if (-not $VerifyOnly) {
                             if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName)))) {
                                 copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
