@@ -204,7 +204,7 @@ if (-not($SkipFolderCreation)) {
     if (-not ($DryRun)) {
         $jobs = while ($i -lt $folders.Count) {
             $fileBatch = $folders[$i..$j]
-            $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
+            $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory) -FileNameSeed "Folders-"
             Add-Content -Path $LogName -Value "[INFO]|[Folder]|[FolderCreated]"
             Start-ThreadJob -Name "Folders-$jobName" -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlockFolders  -ThrottleLimit $NumConcurrentJobs
     
@@ -220,7 +220,7 @@ if (-not($SkipFolderCreation)) {
         Write-Host 'Going in Dry...'
         $DummyFolderBatch = $folders[$i..$DryRunNum]
         $batch = 1
-        $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
+        $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory) -FileNameSeed "Folders-"
         Add-Content -Path $LogName -Value "[INFO]|[Folder]|[FolderCreated]"
         & $scriptBlockFolders -filesInBatch $DummyFolderBatch -LogFileName $LogName
         Write-Host 'That wasn''t so bad was it..?'
