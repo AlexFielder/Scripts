@@ -266,30 +266,35 @@ if(-not ($CreateFoldersOnly)) {
                     [string] $destHash = ""
                     [string] $SrcInfo = ""
                     [string] $DestInfo = ""
-                    if ((Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName))) -and (-not ((Get-Item $f.srcFileName) -is [System.IO.DirectoryInfo]))) {
-                        if (-not $VerifyOnly) {
-                            if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName)))) {
-                                copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
+                    try {
+                        if ((Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName))) -and (-not ((Get-Item $f.srcFileName) -is [System.IO.DirectoryInfo]))) {
+                            if (-not $VerifyOnly) {
+                                if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName)))) {
+                                    copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
+                                }
                             }
+                            $srcHash = (Get-FileHash -Path $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
+                            $SrcInfo = $f.srcFileName + $Delim + $srcHash
+                        } else {
+                            $SrcInfo = $f.srcFileName + $Delim + "not found."
                         }
-                        $srcHash = (Get-FileHash -Path $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
-                        $SrcInfo = $f.srcFileName + $Delim + $srcHash
-                    } else {
-                        $SrcInfo = $f.srcFileName + $Delim + "not found."
-                    }
-                    
-
-                    if (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
-                        $destHash = (Get-FileHash -Path $f.destFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
-                        $DestInfo = $f.destFileName + $Delim + $destHash
-                    } else {
-                        $DestInfo = $f.destFileName + $Delim + "not found at location."
-                    }
-                    # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
-                    $info = $SrcInfo + $Delim + $DestInfo
-                    # } else {
                         
-                    # }
+
+                        if (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
+                            $destHash = (Get-FileHash -Path $f.destFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
+                            $DestInfo = $f.destFileName + $Delim + $destHash
+                        } else {
+                            $DestInfo = $f.destFileName + $Delim + "not found at location."
+                        }
+                        # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
+                        $info = $SrcInfo + $Delim + $DestInfo
+                    } catch [System.IO.IOException] {
+                        $info = "Error reading file" + $Delim + $f.srcFileName
+                    } catch {
+                        Write-Host "An error occurred:"
+                        Write-Host $_.ScriptStackTrace
+                        $info = "Error processing" + $f.srcFileName
+                    }
                     $mutex.WaitOne() | Out-Null
                     $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
                     if ($DryRun) { Write-Host 'Writing to log file: '$LogFileName'...' }
