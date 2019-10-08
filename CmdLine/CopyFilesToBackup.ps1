@@ -172,8 +172,15 @@ if (-not($SkipFolderCreation)) {
                 $mutex = New-object -typename 'Threading.Mutex' -ArgumentList $false, 'MyInterProcMutex'
                 $mutex.WaitOne() | Out-Null
                 if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir)))) {
-                    new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
-                    $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
+                    Try {
+                        new-item -Path $DestinationDir -ItemType Directory | Out-Null #-Verbose
+                        $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
+                    } catch [System.IO.IOException] {
+                        Add-Content -Path $LogFileName -Value "Error creating folder: $DestinationDir"
+                    } catch {
+                        Write-Host "An unknown error occurred:"
+                        Write-Host $_.ScriptStackTrace
+                    }
 
                     if (Test-path([Management.Automation.WildcardPattern]::Escape($DestinationDir))) {
                         Add-Content -Path $LogFileName -Value "$DateTime$Delim$DestinationDir$Delim$true"
@@ -266,6 +273,7 @@ if(-not ($CreateFoldersOnly)) {
                     [string] $destHash = ""
                     [string] $SrcInfo = ""
                     [string] $DestInfo = ""
+                    <# Try Catch added from here: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_try_catch_finally?view=powershell-6 #>
                     try {
                         if ((Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName))) -and (-not ((Get-Item $f.srcFileName) -is [System.IO.DirectoryInfo]))) {
                             if (-not $VerifyOnly) {
@@ -289,16 +297,23 @@ if(-not ($CreateFoldersOnly)) {
                         # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
                         $info = $SrcInfo + $Delim + $DestInfo
                     } catch [System.IO.IOException] {
-                        $info = "Error reading file" + $Delim + $f.srcFileName
+                        $info = "Error reading or copying file: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
                     } catch {
-                        Write-Host "An error occurred:"
+                        Write-Host "An unknown error occurred:"
                         Write-Host $_.ScriptStackTrace
-                        $info = "Error processing" + $f.srcFileName
+                        $info = "Error processing: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
                     }
                     $mutex.WaitOne() | Out-Null
                     $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
                     if ($DryRun) { Write-Host 'Writing to log file: '$LogFileName'...' }
-                    Add-Content -Path $LogFileName -Value "$DateTime$Delim$Info"
+                    try {
+                        Add-Content -Path $LogFileName -Value "$DateTime$Delim$Info"
+                    } catch [System.IO.IOException] {
+                        Write-Host "Error writing $DateTime$Delim$Info to log: $LogFileName"
+                    } catch {
+                        Write-Host "An unknown error occurred writing $DateTime$Delim$Info to log: $LogFileName"
+                        Write-Host $_.ScriptStackTrace
+                    }
                     $mutex.ReleaseMutex() | Out-Null
                 }
             }
