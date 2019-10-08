@@ -162,14 +162,12 @@ if (-not($SkipFolderCreation)) {
     $scriptBlockFolders = {
         param(
             [PSCustomObject]$foldersInBatch,
-            [String]$LogFileName
+            [String]$LogFileName,
+            [String]$Delim
         )
 
         function CreateBatchOfFolders {
-            param(
-                [String]$LogFileName, 
-                [PSCustomObject]$FolderColl
-            )
+            param([String]$LogFileName, [PSCustomObject]$FolderColl, [String]$Delim)
             foreach($DestinationDir in $FolderColl) {
                 $mutex = New-object -typename 'Threading.Mutex' -ArgumentList $false, 'MyInterProcMutex'
                 $mutex.WaitOne() | Out-Null
@@ -189,7 +187,7 @@ if (-not($SkipFolderCreation)) {
                 $mutex.ReleaseMutex() | Out-Null
             }
         }
-        CreateBatchOfFolders -LogFileName $LogFileName -FolderColl $foldersInBatch
+        CreateBatchOfFolders -LogFileName $LogFileName -FolderColl $foldersInBatch -Delim $Delim
     }
 
     # Write-Host 'Creating Folders...'
@@ -206,7 +204,7 @@ if (-not($SkipFolderCreation)) {
             $fileBatch = $folders[$i..$j]
             $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory) -FileNameSeed "Folders"
             Add-Content -Path $LogName -Value "[INFO]|[Folder]|[FolderCreated]"
-            Start-ThreadJob -Name "Folders-$jobName" -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlockFolders  -ThrottleLimit $NumConcurrentJobs
+            Start-ThreadJob -Name "Folders-$jobName" -ArgumentList $fileBatch, $LogName, $Delim -ScriptBlock $scriptBlockFolders  -ThrottleLimit $NumConcurrentJobs
     
             $batch = $batch + 1
             $i = $j + 1
