@@ -36,7 +36,8 @@ Param(
     [int64] $totalsize = 100MB, 
     [int] $timerangehours = 24, 
     [string] $filenameseed = "0123456789", #!£$%^&*¬",
-    [int] $numProjects = 50    
+    [int] $numProjects = 50,
+    [String] $FileList = ""
 ) 
 
 [int] $fileCount = 0
@@ -62,83 +63,86 @@ if (-not (Test-Path -Path $TargetPath -PathType Container ))
 $currentsize = [int64]0
 $currentime = Get-Date
 Push-Location $TargetPath
+if ($FileList -eq "") {
+    #$missionList = New-Object "System.Collections.Generic.List[mission]"
+    $randomProjectNumList = New-Object  "System.Collections.Generic.List[string]"
+    $randomProjectNum = new-Object int32
+    ForEach ($number in 1..$numProjects) {
+        $randomProjectNum = Get-Random -Minimum 1 -Maximum (999999 - $numProjects)
+        $paddedProjectNum = ([string]($randomProjectNum)).PadLeft(4,'0')
+        $randomProjectNumList.add($paddedProjectNum)
+    }
 
-#$missionList = New-Object "System.Collections.Generic.List[mission]"
-$randomProjectNumList = New-Object  "System.Collections.Generic.List[string]"
-$randomProjectNum = new-Object int32
-ForEach ($number in 1..$numProjects) {
-    $randomProjectNum = Get-Random -Minimum 1 -Maximum (999999 - $numProjects)
-    $paddedProjectNum = ([string]($randomProjectNum)).PadLeft(4,'0')
-    $randomProjectNumList.add($paddedProjectNum)
-}
-
-while ($currentsize -lt $totalsize)
-{
-    ForEach ($projectNumber in $randomProjectNumList)
+    while ($currentsize -lt $totalsize)
     {
-        #$projectNumber = Get-Random -Minimum 0 -Maximum (9999 - $numProjects)
-        #$paddedProjectNum = ([string]($number + $projectNumber)).PadLeft(4,'0')
-        $newPath = "$TargetPath\$projectNumber"
-        if(!(test-path "$newPath")){
-            New-Item -ItemType Directory -Path "$newPath"
-        }
-        Set-Location -Path "$newPath"
-        #
-        # generate a random file size. Do the smart thing if min==max. Do not exceed the specified total size.
-        #
-        if ($minfilesize -lt $maxfilesize)
+        ForEach ($projectNumber in $randomProjectNumList)
         {
-            $filesize = Get-Random -Minimum $minfilesize -Maximum $maxfilesize
-        } else {
-            $filesize = $maxfilesize
-        }
-        if ($currentsize + $filesize -gt $totalsize) {
-            $filesize = $totalsize - $currentsize
-        }
-        $currentsize += $filesize
-
-        #
-        # use a very fast .NET random generator
-        #
-        $data = new-object byte[] $filesize
-        (new-object Random).NextBytes($data)
-
-        #
-        # generate a random file name by shuffling the input filename seed.
-        #
-        $filename = ($filenameseed.ToCharArray() | Get-Random -Count ($filenameseed.Length)) -join ''
-        $Ext = Get-Random -InputObject $Extlist
-        $path = Join-Path $newPath "$($projectNumber + "-" + $filename)$Ext"
-        # $path = Join-Path $TargetPath "$($filename)$Ext"
-
-        #
-        # write the binary data, and randomize the timestamps as required.
-        #
-        try
-        {
-            [IO.File]::WriteAllBytes([Management.Automation.WildcardPattern]::Escape($path), $data)
-            if ($timerangehours -gt 0)
+            #$projectNumber = Get-Random -Minimum 0 -Maximum (9999 - $numProjects)
+            #$paddedProjectNum = ([string]($number + $projectNumber)).PadLeft(4,'0')
+            $newPath = "$TargetPath\$projectNumber"
+            if(!(test-path "$newPath")){
+                New-Item -ItemType Directory -Path "$newPath"
+            }
+            Set-Location -Path "$newPath"
+            #
+            # generate a random file size. Do the smart thing if min==max. Do not exceed the specified total size.
+            #
+            if ($minfilesize -lt $maxfilesize)
             {
-                $timestamp = $currentime.AddHours(-1 * (Get-Random -Minimum 0 -Maximum $timerangehours))
+                $filesize = Get-Random -Minimum $minfilesize -Maximum $maxfilesize
             } else {
-                $timestamp = $currentime
+                $filesize = $maxfilesize
             }
-            $fileobject = Get-Item -Path $path
-            $fileobject.CreationTime = $timestamp
-            $fileobject.LastWriteTime = $timestamp
-    
-            # show what we did.
-            [pscustomobject] @{
-                filename = $path
-                timestamp = $timestamp
-                datasize = $filesize
+            if ($currentsize + $filesize -gt $totalsize) {
+                $filesize = $totalsize - $currentsize
             }
-            $fileCount += 1
-        } catch {
-            $message = "failed to write data to $path, error $($_.Exception.Message)" 
-            Throw $message 
+            $currentsize += $filesize
+
+            #
+            # use a very fast .NET random generator
+            #
+            $data = new-object byte[] $filesize
+            (new-object Random).NextBytes($data)
+
+            #
+            # generate a random file name by shuffling the input filename seed.
+            #
+            $filename = ($filenameseed.ToCharArray() | Get-Random -Count ($filenameseed.Length)) -join ''
+            $Ext = Get-Random -InputObject $Extlist
+            $path = Join-Path $newPath "$($projectNumber + "-" + $filename)$Ext"
+            # $path = Join-Path $TargetPath "$($filename)$Ext"
+
+            #
+            # write the binary data, and randomize the timestamps as required.
+            #
+            try
+            {
+                [IO.File]::WriteAllBytes([Management.Automation.WildcardPattern]::Escape($path), $data)
+                if ($timerangehours -gt 0)
+                {
+                    $timestamp = $currentime.AddHours(-1 * (Get-Random -Minimum 0 -Maximum $timerangehours))
+                } else {
+                    $timestamp = $currentime
+                }
+                $fileobject = Get-Item -Path $path
+                $fileobject.CreationTime = $timestamp
+                $fileobject.LastWriteTime = $timestamp
+        
+                # show what we did.
+                [pscustomobject] @{
+                    filename = $path
+                    timestamp = $timestamp
+                    datasize = $filesize
+                }
+                $fileCount += 1
+            } catch {
+                $message = "failed to write data to $path, error $($_.Exception.Message)" 
+                Throw $message 
+            }
         }
     }
+} else {
+    
 }
 Pop-Location
 
