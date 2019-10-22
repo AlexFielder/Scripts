@@ -18,6 +18,8 @@
         Default is 0123456789 but can be anything you want; except special characters
     .PARAMETER NumProjects
         Default is 50 which creates 50 project folders
+    .PARAMETER FileList
+        Default is "" and only used if you have a list of files to create
     .EXAMPLE
         $topfolder = "C:\temp\CustomerName-dummy-data"
         New-Item -Path $topfolder -ItemType Directory
@@ -44,26 +46,26 @@ Param(
 
 #create and start a stopwatch object to measure how long it all takes.
 $stopwatch = [Diagnostics.Stopwatch]::StartNew()
-
-#dummy extension list
-$Extlist='.dwf','.dwg','.dxf','.pdf','.docx','.xlsx','.zip','.rvt','.dog','.dgn','.txt'
-
-#
-# convert to absolute path as required by WriteAllBytes, and check existence of the directory.
-#
-if (-not (Split-Path -IsAbsolute $TargetPath))
-{
-    $TargetPath = Join-Path (Get-Location).Path $TargetPath
-}
-if (-not (Test-Path -Path $TargetPath -PathType Container ))
-{
-    throw "TargetPath '$TargetPath' does not exist or is not a directory"
-}
-
-$currentsize = [int64]0
-$currentime = Get-Date
-Push-Location $TargetPath
 if ($FileList -eq "") {
+    #dummy extension list
+    $Extlist='.dwf','.dwg','.dxf','.pdf','.docx','.xlsx','.zip','.rvt','.dog','.dgn','.txt'
+
+    #
+    # convert to absolute path as required by WriteAllBytes, and check existence of the directory.
+    #
+    if (-not (Split-Path -IsAbsolute $TargetPath))
+    {
+        $TargetPath = Join-Path (Get-Location).Path $TargetPath
+    }
+    if (-not (Test-Path -Path $TargetPath -PathType Container ))
+    {
+        throw "TargetPath '$TargetPath' does not exist or is not a directory"
+    }
+
+    $currentsize = [int64]0
+    $currentime = Get-Date
+    Push-Location $TargetPath
+
     #$missionList = New-Object "System.Collections.Generic.List[mission]"
     $randomProjectNumList = New-Object  "System.Collections.Generic.List[string]"
     $randomProjectNum = new-Object int32
@@ -141,10 +143,35 @@ if ($FileList -eq "") {
             }
         }
     }
+    Pop-Location
 } else {
-    
+    Write-Host 'Loading CSV data into memory...'
+    $files = Import-Csv -path $FileList | Select-Object SrcFileName
+    write-host 'Creating '+$files.Length+' files'
+    ForEach ($f in $files) {
+        [System.IO.Fileinfo]$DestinationFilePath = $f.SrcFileName
+        [String]$SourceDir = $DestinationFilePath.DirectoryName
+        try {
+            if(!(test-path "$SourceDir")){
+                New-Item -ItemType Directory -Path "$SourceDir"
+            }
+            $path = $f.SrcFileName
+        } catch {
+            $message = "failed create folder @ $SourceDir, error $($_.Exception.Message)" 
+            Throw $message
+        }
+        $filesize = Get-Random -Minimum $minfilesize -Maximum ($minfilesize * 2)
+        $data = new-object byte[] $filesize
+        (new-object Random).NextBytes($data)
+        try {
+            [IO.File]::WriteAllBytes([Management.Automation.WildcardPattern]::Escape($path), $data)
+        } catch {
+            $message = "failed to write data to $path, error $($_.Exception.Message)" 
+            Throw $message
+        }
+    }
 }
-Pop-Location
+
 
 # how long did it all take?
 $stopwatch.stop()
