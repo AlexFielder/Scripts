@@ -248,4 +248,4 @@ if ($FileList -eq "") {
 # how long did it all take?
 $stopwatch.stop()
 $stopwatch
-Write-Output "Total new fileCount = " + $fileCount
+Write-Output "Total new fileCount = " + $files.Count
