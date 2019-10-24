@@ -151,7 +151,7 @@ if ($FileList -eq "") {
     }
     Pop-Location
 } else {
-    Write-host 'Writing provided file: '+$FileList+'using Start-ThreadJob to create'+$NumConcurrentJobs
+    Write-host "Writing provided file: $FileList using Start-ThreadJob to create $NumConcurrentJobs Jobs"
     Write-Host 'Loading CSV data into memory...'
     $files = Import-Csv -path $FileList | Select-Object SrcFileName
     # write-host 'Creating '+$files.Length+' files'
@@ -159,17 +159,20 @@ if ($FileList -eq "") {
         param(
             [PSCustomObject]$filesInBatch,
             [String]$LogFilename,
-            [String]$Delim
+            [int64]$minfilesize,
+            [int64]$maxfilesize
         )
 
         function CreateBatchOfFiles {
-            param([String]$LogFilename, [PSCustomObject]$FileColl)
+            param([String]$LogFilename, [PSCustomObject]$FileColl, [int64]$minfilesize, [int64]$maxfilesize)
             foreach ($f in $fileColl) {
+                $mutex = New-object -typename 'Threading.Mutex' -ArgumentList $false, 'MyInterProcMutex'
+                $mutex.WaitOne() | Out-Null
                 [System.IO.Fileinfo]$DestinationFilePath = $f.SrcFileName
                 [String]$SourceDir = $DestinationFilePath.DirectoryName
                 try {
                     if(!(test-path "$SourceDir")){
-                        New-Item -ItemType Directory -Path "$SourceDir"
+                        New-Item -ItemType Directory -Path "$SourceDir" | Out-Null
                     }
                     $path = $f.SrcFileName
                 } catch {
@@ -181,28 +184,32 @@ if ($FileList -eq "") {
                 (new-object Random).NextBytes($data)
                 try {
                     if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($path)))) {
-                        [IO.File]::WriteAllBytes([Management.Automation.WildcardPattern]::Escape($path), $data)
+                        [IO.File]::WriteAllBytes([Management.Automation.WildcardPattern]::Escape($path), $data) | Out-Null
                     }
                 } catch {
                     $message = "failed to write data to $path, error $($_.Exception.Message)" 
                     Throw $message
                 }
+                $mutex.ReleaseMutex() | Out-Null
             }
         }
 
-        CreateBatchOfFiles -LogFileName $LogFileName -FileColl $filesInBatch
+        CreateBatchOfFiles -LogFileName $LogFileName -FileColl $filesInBatch -minfilesize $minfilesize -maxfilesize $maxfilesize
 
     }
 
     $i = 0
     $j = $FilesPerBatch - 1
+    $batch = 1
+
     $LogName = ""
 
     Write-host 'Creating jobs for file creation...'
     $jobs = while ($i -lt $files.Count) {
         $fileBatch = $files[$i..$j]
         #Could add logging here, but do we really need it?
-        Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlockBatchFiles  -ThrottleLimit $NumConcurrentJobs
+        $jobName = "FileCreate$batch"
+        Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $minfilesize, $maxfilesize -ScriptBlock $scriptBlockBatchFiles  -ThrottleLimit $NumConcurrentJobs
         $batch = $batch + 1
         $i = $j + 1
         $j += $filesPerBatch
