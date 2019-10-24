@@ -20,6 +20,10 @@
         Default is 50 which creates 50 project folders
     .PARAMETER FileList
         Default is "" and only used if you have a list of files to create
+    .PARAMETER NumConcurrentJobs
+        default is 25 (but can be 100 if you want to stress the machine to maximum!)
+    .PARAMETER FilesPerBatch
+        default is 1000 this can be tweaked if performance becomes an issue because the Threading will HAMMER any network you run it on.
     .EXAMPLE
         $topfolder = "C:\temp\CustomerName-dummy-data"
         New-Item -Path $topfolder -ItemType Directory
@@ -39,7 +43,9 @@ Param(
     [int] $timerangehours = 24, 
     [string] $filenameseed = "0123456789", #!£$%^&*¬",
     [int] $numProjects = 50,
-    [String] $FileList = ""
+    [String] $FileList = "",
+    [int] $NumConcurrentJobs =25,
+    [int] $FilesPerBatch = 1000
 ) 
 
 [int] $fileCount = 0
@@ -145,33 +151,69 @@ if ($FileList -eq "") {
     }
     Pop-Location
 } else {
+    Write-host 'Writing provided file: '+$FileList+'using Start-ThreadJob to create'+$NumConcurrentJobs
     Write-Host 'Loading CSV data into memory...'
     $files = Import-Csv -path $FileList | Select-Object SrcFileName
     # write-host 'Creating '+$files.Length+' files'
-    ForEach ($f in $files) {
-        [System.IO.Fileinfo]$DestinationFilePath = $f.SrcFileName
-        [String]$SourceDir = $DestinationFilePath.DirectoryName
-        try {
-            if(!(test-path "$SourceDir")){
-                New-Item -ItemType Directory -Path "$SourceDir"
+    $scriptBlockBatchFiles = {
+        param(
+            [PSCustomObject]$filesInBatch,
+            [String]$LogFilename,
+            [String]$Delim
+        )
+
+        function CreateBatchOfFiles {
+            param([String]$LogFilename, [PSCustomObject]$FileColl, [String]$Delim)
+            foreach ($f in $fileColl) {
+                [System.IO.Fileinfo]$DestinationFilePath = $f.SrcFileName
+                [String]$SourceDir = $DestinationFilePath.DirectoryName
+                try {
+                    if(!(test-path "$SourceDir")){
+                        New-Item -ItemType Directory -Path "$SourceDir"
+                    }
+                    $path = $f.SrcFileName
+                } catch {
+                    $message = "failed create folder @ $SourceDir, error $($_.Exception.Message)" 
+                    Throw $message
+                }
+                $filesize = Get-Random -Minimum $minfilesize -Maximum ($minfilesize * 2)
+                $data = new-object byte[] $filesize
+                (new-object Random).NextBytes($data)
+                try {
+                    if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($path)))) {
+                        [IO.File]::WriteAllBytes([Management.Automation.WildcardPattern]::Escape($path), $data)
+                    }
+                } catch {
+                    $message = "failed to write data to $path, error $($_.Exception.Message)" 
+                    Throw $message
+                }
             }
-            $path = $f.SrcFileName
-        } catch {
-            $message = "failed create folder @ $SourceDir, error $($_.Exception.Message)" 
-            Throw $message
-        }
-        $filesize = Get-Random -Minimum $minfilesize -Maximum ($minfilesize * 2)
-        $data = new-object byte[] $filesize
-        (new-object Random).NextBytes($data)
-        try {
-            if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($path)))) {
-                [IO.File]::WriteAllBytes([Management.Automation.WildcardPattern]::Escape($path), $data)
-            }
-        } catch {
-            $message = "failed to write data to $path, error $($_.Exception.Message)" 
-            Throw $message
         }
     }
+    # ForEach ($f in $files) {
+    #     [System.IO.Fileinfo]$DestinationFilePath = $f.SrcFileName
+    #     [String]$SourceDir = $DestinationFilePath.DirectoryName
+    #     try {
+    #         if(!(test-path "$SourceDir")){
+    #             New-Item -ItemType Directory -Path "$SourceDir"
+    #         }
+    #         $path = $f.SrcFileName
+    #     } catch {
+    #         $message = "failed create folder @ $SourceDir, error $($_.Exception.Message)" 
+    #         Throw $message
+    #     }
+    #     $filesize = Get-Random -Minimum $minfilesize -Maximum ($minfilesize * 2)
+    #     $data = new-object byte[] $filesize
+    #     (new-object Random).NextBytes($data)
+    #     try {
+    #         if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($path)))) {
+    #             [IO.File]::WriteAllBytes([Management.Automation.WildcardPattern]::Escape($path), $data)
+    #         }
+    #     } catch {
+    #         $message = "failed to write data to $path, error $($_.Exception.Message)" 
+    #         Throw $message
+    #     }
+    # }
 }
 
 
