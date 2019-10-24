@@ -164,7 +164,9 @@ if ($FileList -eq "") {
         $data = new-object byte[] $filesize
         (new-object Random).NextBytes($data)
         try {
-            [IO.File]::WriteAllBytes([Management.Automation.WildcardPattern]::Escape($path), $data)
+            if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName)))) {
+                [IO.File]::WriteAllBytes([Management.Automation.WildcardPattern]::Escape($path), $data)
+            }
         } catch {
             $message = "failed to write data to $path, error $($_.Exception.Message)" 
             Throw $message
