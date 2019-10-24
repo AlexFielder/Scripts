@@ -147,7 +147,7 @@ if ($FileList -eq "") {
 } else {
     Write-Host 'Loading CSV data into memory...'
     $files = Import-Csv -path $FileList | Select-Object SrcFileName
-    write-host 'Creating '+$files.Length+' files'
+    # write-host 'Creating '+$files.Length+' files'
     ForEach ($f in $files) {
         [System.IO.Fileinfo]$DestinationFilePath = $f.SrcFileName
         [String]$SourceDir = $DestinationFilePath.DirectoryName
@@ -164,7 +164,7 @@ if ($FileList -eq "") {
         $data = new-object byte[] $filesize
         (new-object Random).NextBytes($data)
         try {
-            if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName)))) {
+            if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($path)))) {
                 [IO.File]::WriteAllBytes([Management.Automation.WildcardPattern]::Escape($path), $data)
             }
         } catch {
