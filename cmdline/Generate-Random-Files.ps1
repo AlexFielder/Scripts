@@ -203,6 +203,11 @@ if ($FileList -eq "") {
         $fileBatch = $files[$i..$j]
         #Could add logging here, but do we really need it?
         Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlockBatchFiles  -ThrottleLimit $NumConcurrentJobs
+        $batch = $batch + 1
+        $i = $j + 1
+        $j += $filesPerBatch
+        if ($i -gt $files.Count) {$i = $files.Count}
+        if ($j -gt $files.Count) {$j = $files.Count}
     }
     Write-Host "Waiting for $($jobs.Count) jobs to complete..."
     Receive-Job -Job $jobs -Wait -AutoRemoveJob
