@@ -163,7 +163,7 @@ if ($FileList -eq "") {
         )
 
         function CreateBatchOfFiles {
-            param([String]$LogFilename, [PSCustomObject]$FileColl, [String]$Delim)
+            param([String]$LogFilename, [PSCustomObject]$FileColl)
             foreach ($f in $fileColl) {
                 [System.IO.Fileinfo]$DestinationFilePath = $f.SrcFileName
                 [String]$SourceDir = $DestinationFilePath.DirectoryName
@@ -189,7 +189,23 @@ if ($FileList -eq "") {
                 }
             }
         }
+
+        CreateBatchOfFiles -LogFileName $LogFileName -FileColl $filesInBatch
+
     }
+
+    $i = 0
+    $j = $FilesPerBatch - 1
+    $LogName = ""
+
+    Write-host 'Creating jobs for file creation...'
+    $jobs = while ($i -lt $files.Count) {
+        $fileBatch = $files[$i..$j]
+        #Could add logging here, but do we really need it?
+        Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName -ScriptBlock $scriptBlockBatchFiles  -ThrottleLimit $NumConcurrentJobs
+    }
+    Write-Host "Waiting for $($jobs.Count) jobs to complete..."
+    Receive-Job -Job $jobs -Wait -AutoRemoveJob
     # ForEach ($f in $files) {
     #     [System.IO.Fileinfo]$DestinationFilePath = $f.SrcFileName
     #     [String]$SourceDir = $DestinationFilePath.DirectoryName
