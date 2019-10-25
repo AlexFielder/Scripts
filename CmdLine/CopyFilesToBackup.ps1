@@ -56,6 +56,7 @@ if (-not ((Get-MpPreference | Format-List DisableRealtimeMonitoring) -eq 1)) {
 
 <# writing out warnings to the user otherwise we end up in an infinite loop #>
 Write-Host 'Killing any processes that might interfere with log writing i.e. Notepad++' -ForegroundColor Red
+Write-host 'Also disabling Windows search service as this can also interfere with the writing/copying of files'
 Write-Host 'If you DO NOT pass a path for a log file, please ensure the folder: '$FileList' csv is located in has no existing *.log files' -ForegroundColor Red -BackgroundColor Yellow
 Write-Host 'Failure to heed the above warning will result in PowerShell getting stuck in an infinite loop as the concatenated log will concatenate itself to itself' -ForegroundColor Red -BackgroundColor Yellow
 <# Copied from here: https://stackoverflow.com/a/20886446/572634 #>
@@ -89,6 +90,14 @@ if ($Notepadplusplus) {
   }
 }
 Remove-Variable Notepadplusplus
+
+$SearchService = Get-Service -Name 'WSearch'
+if ($SearchService.Status -eq 'Running') {
+    $SearchService | Stop-Service -Force
+}
+$SearchService | Set-Service -StartupType Disable
+
+
 
 Write-Host 'Creating log file if it does not exist...'
 
@@ -370,4 +379,8 @@ Write-Host 'Re-enabling Windows Defender Setting(s) if we modified them'
 if (-not ((Get-MpPreference | Format-List DisableRealtimeMonitoring) -eq 0)) {
     Set-MpPreference -DisableRealtimeMonitoring 0
 }
+Write-host 'Re-enabling Windows Search Service if we disabled it'
+$SearchService | Set-Service -StartupType Automatic
+$SearchService | Start-Service
+
 Write-Host "Total time lapsed: $([datetime]::UtcNow - $dtStart)"
