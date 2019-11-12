@@ -284,33 +284,33 @@ if(-not ($CreateFoldersOnly)) {
                     [string] $DestInfo = ""
                     <# Try Catch added from here: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_try_catch_finally?view=powershell-6 #>
                     try {
-                        if ((Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName))) -and (-not ((Get-Item $f.srcFileName) -is [System.IO.DirectoryInfo]))) {
+                        if ((Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName))) -and (-not ((Get-Item[Management.Automation.WildcardPattern]::Escape($f.srcFileName)) -is [System.IO.DirectoryInfo]))) {
                             if (-not $VerifyOnly) {
                                 if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName)))) {
                                     copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
                                 }
                             }
-                            $srcHash = (Get-FileHash -Path $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
-                            $SrcInfo = $f.srcFileName + $Delim + $srcHash
+                            $srcHash = (Get-FileHash -Path [Management.Automation.WildcardPattern]::Escape($f.srcFileName) -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
+                            $SrcInfo = [Management.Automation.WildcardPattern]::Escape($f.srcFileName) + $Delim + $srcHash
                         } else {
-                            $SrcInfo = $f.srcFileName + $Delim + "not found."
+                            $SrcInfo = [Management.Automation.WildcardPattern]::Escape($f.srcFileName) + $Delim + "not found."
                         }
                         
 
                         if (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
-                            $destHash = (Get-FileHash -Path $f.destFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
-                            $DestInfo = $f.destFileName + $Delim + $destHash
+                            $destHash = (Get-FileHash -Path [Management.Automation.WildcardPattern]::Escape($f.destFileName) -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
+                            $DestInfo = [Management.Automation.WildcardPattern]::Escape($f.destFileName) + $Delim + $destHash
                         } else {
-                            $DestInfo = $f.destFileName + $Delim + "not found at location."
+                            $DestInfo = [Management.Automation.WildcardPattern]::Escape($f.destFileName) + $Delim + "not found at location."
                         }
                         # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
                         $info = $SrcInfo + $Delim + $DestInfo
                     } catch [System.IO.IOException] {
-                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + "Error reading or copying file: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
+                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + "Error reading or copying file: " + [Management.Automation.WildcardPattern]::Escape($f.srcFileName) + $Delim + "To destination: " + $f.destFileName
                     } catch {
                         Write-Host "An unknown error occurred:"
                         Write-Host $_.ScriptStackTrace
-                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + "Error processing: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
+                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + "Error processing: " + [Management.Automation.WildcardPattern]::Escape($f.srcFileName) + $Delim + "To destination: " + $f.destFileName
                     }
                     $mutex.WaitOne() | Out-Null
                     $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
