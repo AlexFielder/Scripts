@@ -306,11 +306,11 @@ if(-not ($CreateFoldersOnly)) {
                         # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
                         $info = $SrcInfo + $Delim + $DestInfo
                     } catch [System.IO.IOException] {
-                        $info = "Error reading or copying file: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
+                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + "Error reading or copying file: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
                     } catch {
                         Write-Host "An unknown error occurred:"
                         Write-Host $_.ScriptStackTrace
-                        $info = "Error processing: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
+                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + "Error processing: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
                     }
                     $mutex.WaitOne() | Out-Null
                     $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
@@ -339,7 +339,7 @@ if(-not ($CreateFoldersOnly)) {
         $jobs = while ($i -lt $files.Count) {
             $fileBatch = $files[$i..$j]
             $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
-            Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
+            Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]$Delim[Error]$Delim[Error Destination]"
             Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock  -ThrottleLimit $NumConcurrentJobs
 
             $batch = $batch + 1
@@ -355,7 +355,7 @@ if(-not ($CreateFoldersOnly)) {
         $DummyFileBatch = $files[$i..$DryRunNum]
         $batch = 1
         $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
-        Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]"
+        Add-Content -Path $LogName -Value "[INFO]$Delim[Src Filename]$Delim[Src Hash]$Delim[Dest Filename]$Delim[Dest Hash]$Delim[Error]$Delim[Error Destination]"
         & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly
         Write-Host 'That wasn''t so bad was it..?'
     }
