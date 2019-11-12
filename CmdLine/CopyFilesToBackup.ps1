@@ -332,7 +332,7 @@ if(-not ($CreateFoldersOnly)) {
     $i = 0
     $j = $filesPerBatch - 1
     $batch = 1
-    $LogName = ""
+    # $LogName = ""
 
     Write-Host 'Creating jobs...'
     if (-not ($DryRun)) {
@@ -372,6 +372,8 @@ if(-not ($CreateFoldersOnly)) {
     # Get-ChildItem -path $LogDirectory -Filter *.log | Where-Object {$_.basename -like ‘$LognameBaseName?’} |Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation -Delimiter $Delim | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8
     Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation -Delimiter $Delim | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8
     Write-Host "Concatenated log file = $ConcatenatedLog"
+    Write-Host "Converting Concatenated log to Excel, because who doesn't love trawling through many thousands of rows of Excel cells!"
+    Import-Csv -Delimiter $Delim -Path $ConcatenatedLog | export-excel -path '$LogDirectory\$LognameBaseName.xlsx'
 } else {
     Write-Host 'Skipped file copy step as requested'
 }
