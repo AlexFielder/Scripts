@@ -288,9 +288,10 @@ if(-not ($CreateFoldersOnly)) {
             [PSCustomObject]$filesInBatch, 
             [String]$LogFileName,
             [Boolean]$VerifyOnly,
-            [String]$Delim)
+            [String]$Delim,
+            [String[]]$Header)
             function ProcessFileAndHashToLog {
-                param( [String]$LogFileName, [PSCustomObject]$FileColl, [Boolean] $VerifyOnly, [String] $Delim)
+                param( [String]$LogFileName, [PSCustomObject]$FileColl, [Boolean] $VerifyOnly, [String] $Delim, [String[]]$Header)
                 foreach ($f in $FileColl) {
                     $mutex = New-object -typename 'Threading.Mutex' -ArgumentList $false, 'MyInterProcMutex'
                     [string] $srcHash = ""
@@ -352,7 +353,7 @@ if(-not ($CreateFoldersOnly)) {
                     $mutex.ReleaseMutex() | Out-Null
                 }
             }
-            ProcessFileAndHashToLog -LogFileName $LogFileName -FileColl $filesInBatch -VerifyOnly $VerifyOnly -Delim $Delim
+            ProcessFileAndHashToLog -LogFileName $LogFileName -FileColl $filesInBatch -VerifyOnly $VerifyOnly -Delim $Delim -Header $Header
     }
 
     $i = 0
@@ -366,7 +367,7 @@ if(-not ($CreateFoldersOnly)) {
             $fileBatch = $files[$i..$j]
             $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory) ([Ref]$LognameBaseName)
             Add-Content -Path $LogName -Value $FormattedHeaders #"[INFO]$Delim[SrcFilename]$Delim[SrcHash]$Delim[DestFilename]$Delim[DestHash]$Delim[Error]$Delim[ErrorDestination]$Delim[CDocID]$Delim[CVersion]$Delim[CIdentifier]$Delim[LatestRevisionNo]"
-            Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock  -ThrottleLimit $NumConcurrentJobs
+            Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim, $Header -ScriptBlock $scriptBlock  -ThrottleLimit $NumConcurrentJobs
 
             $batch = $batch + 1
             $i = $j + 1
