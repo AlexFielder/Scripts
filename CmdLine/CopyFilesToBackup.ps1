@@ -321,7 +321,7 @@ if(-not ($CreateFoldersOnly)) {
                         # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
                         [String] $FileData = ''
                         foreach ($s in $Header) {
-                            if (-not ($s -eq 'srcfilename')  -and (-not ($s -eq 'destfilename'))) {
+                            if (-not ($s -like 'src*')  -and (-not ($s -like 'dest*')) -and (-not ($s -eq 'INFO')) -and (-not ($s -like 'erro*'))) {
                                 if ($FileData -eq "") {
                                     #starts with a delimiter because the last info above doesn't end with one.
                                     $FileData = $Delim, $f."$s"
@@ -330,9 +330,9 @@ if(-not ($CreateFoldersOnly)) {
                                 }
                             }
                         }
-                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + $FileData
+                        $info = $SrcInfo + $Delim + $DestInfo + $FileData
                     } catch [System.IO.IOException] {
-                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + $FileData + $Delim + "Error reading or copying file: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
+                        $info = $SrcInfo + $Delim + $DestInfo + $FileData + $Delim + "Error reading or copying file: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
                     } catch {
                         Write-Host "An unknown error occurred:"
                         Write-Host $_.ScriptStackTrace
@@ -398,7 +398,7 @@ if(-not ($CreateFoldersOnly)) {
     # Get-ChildItem -path $LogDirectory -Filter *.log | Where-Object {$_.basename -like ‘$LognameBaseName?’} |Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation -Delimiter $Delim | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8
     Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation -Delimiter $Delim | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8
     Write-Host "Concatenated log file = $ConcatenatedLog"
-    Write-Host "Converting Concatenated log to Excel, because who doesn't love trawling through many thousands of rows of Excel cells!"
+    Write-Host "Converting Concatenated log to Excel, because who doesn't LOVE trawling through many thousands of rows of Excel cells!"
     Import-Csv -Delimiter $Delim -Path $ConcatenatedLog | export-excel -path "$LogDirectory\$LognameBaseName.xlsx"
 } else {
     Write-Host 'Skipped file copy step as requested'
