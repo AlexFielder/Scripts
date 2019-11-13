@@ -400,7 +400,7 @@ if(-not ($CreateFoldersOnly)) {
     Get-ChildItem -path $LogDirectory -Filter *.log | Select-Object -ExpandProperty FullName | Import-Csv -Delimiter $Delim | Sort-Object '[INFO]' | convertto-csv -NoTypeInformation -Delimiter $Delim | ForEach-Object { $_ -replace '"', ""} | out-file $ConcatenatedLog -Force -Encoding UTF8
     Write-Host "Concatenated log file = $ConcatenatedLog"
     Write-Host "Converting Concatenated log to Excel, because who doesn't LOVE trawling through many thousands of rows of Excel cells!"
-    Import-Csv -Delimiter $Delim -Path $ConcatenatedLog | export-excel -path "$LogDirectory\$LognameBaseName.xlsx"
+    Import-Csv -Delimiter $Delim -Path $ConcatenatedLog | export-excel -path "$LogDirectory\$LognameBaseName-hashed.xlsx"
 } else {
     Write-Host 'Skipped file copy step as requested'
 }
