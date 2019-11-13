@@ -49,8 +49,8 @@ Param(
     [Boolean] $CreateFoldersOnly = $false,
     [String[]] $Header = ('srcfilename', 'destfilename', 'CDocID', 'CVersion', 'CIdentifier', 'LatestRevisionNo')
 )
-<# storing and then disabling important Windows Defender settings  - not sure if this will work on customer machines so needs testing with -DryRun setting #>
-Write-Host 'Storing Windows Defender settings so we can turn them back on afterwards'
+<# disabling Windows Defender settings#>
+Write-Host "Turning off Windows Defender 'RealtimeMonitoring' because it REALLY hampers performance!"
 if (-not ((Get-MpPreference | Format-List DisableRealtimeMonitoring) -eq 1)) {
     Set-MpPreference -DisableRealtimeMonitoring 1
 }
@@ -90,6 +90,7 @@ if ($Notepadplusplus) {
     $Notepadplusplus | Stop-Process -Force
   }
 }
+
 Remove-Variable Notepadplusplus
 
 $SearchService = Get-Service -Name 'WSearch'
@@ -97,8 +98,6 @@ if ($SearchService.Status -eq 'Running') {
     $SearchService | Stop-Service -Force
 }
 $SearchService | Set-Service -StartupType Disable
-
-
 
 Write-Host 'Creating log file if it does not exist...'
 
@@ -305,19 +304,24 @@ if(-not ($CreateFoldersOnly)) {
                             $DestInfo = $f.destFileName + $Delim + "not found at location."
                         }
                         # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
-                        [String[]] $FileData = ''
+                        [String] $FileData = ''
                         foreach ($s in $Header) {
                             if (-not ($s -eq 'srcfilename')  -and (-not ($s -eq 'destfilename'))) {
-                                $FileData = $Delim, $FileData, $Delim, $f.$s
+                                if ($FileData -eq "") {
+                                    #starts with a delimiter because the last info above doesn't end with one.
+                                    $FileData = $Delim, $f."$s"
+                                } else {
+                                    $FileData = $FileData, $Delim, $f."$s"
+                                }
                             }
                         }
-                        $info = $SrcInfo + $Delim + $DestInfo + $FileData[0]
+                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + $Delim + $FileData
                     } catch [System.IO.IOException] {
-                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + "Error reading or copying file: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
+                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + "Error reading or copying file: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName + $Delim + $FileData
                     } catch {
                         Write-Host "An unknown error occurred:"
                         Write-Host $_.ScriptStackTrace
-                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + "Error processing: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
+                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + "Error processing: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName + $Delim + $FileData
                     }
                     $mutex.WaitOne() | Out-Null
                     $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
