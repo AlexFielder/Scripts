@@ -290,7 +290,7 @@ if(-not ($CreateFoldersOnly)) {
                                     copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
                                 }
                             }
-                            $srcHash = (Get-FileHash -Path $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
+                            $srcHash = (Get-FileHash -Path [Management.Automation.WildcardPattern]::Escape($f.srcFileName) -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
                             $SrcInfo = $f.srcFileName + $Delim + $srcHash
                         } else {
                             $SrcInfo = $f.srcFileName + $Delim + "not found."
@@ -298,7 +298,7 @@ if(-not ($CreateFoldersOnly)) {
                         
 
                         if (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
-                            $destHash = (Get-FileHash -Path $f.destFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
+                            $destHash = (Get-FileHash -Path [Management.Automation.WildcardPattern]::Escape($f.destFileName) -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
                             $DestInfo = $f.destFileName + $Delim + $destHash
                         } else {
                             $DestInfo = $f.destFileName + $Delim + "not found at location."
