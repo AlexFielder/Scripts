@@ -47,7 +47,7 @@ Param(
     [String] $Delim = '|',
     [Boolean] $SkipFolderCreation = $true, #$false,
     [Boolean] $CreateFoldersOnly = $false,
-    [String[]] $Header = ('srcfilename', 'destfilename', 'CDocID', 'CVersion', 'CIdentifier', 'LatestRevisionNo')
+    [String[]] $Header = ('INFO','srcfilename', 'srcHash','destfilename','destHash', 'CDocID', 'CVersion', 'CIdentifier', 'LatestRevisionNo','error','errorDestination')
 )
 <# disabling Windows Defender settings#>
 Write-Host "Turning off Windows Defender 'RealtimeMonitoring' because it REALLY hampers performance!"
@@ -151,10 +151,25 @@ function createLog {
 }
 
 Write-Host 'Loading CSV data into memory...'
-
 $files = Import-Csv -path $FileList -Delimiter $Delim | Select-Object $Header #SrcFileName, DestFileName #$files = Import-Csv -path $FileList -Delimiter $Delim -Header $Header #| Select-Object SrcFileName, DestFileName
-
 Write-Host 'CSV Data loaded...'
+
+Write-Host "reformatting list of $Header"
+[String] $FormattedHeaders = ""
+
+for ($i = 0; $i -lt $Header.Length; $i++) {
+    if ($FormattedHeaders -eq "") {
+        $FormattedHeaders = "["+ $Header[$i] + "]$Delim"
+    } else {
+        if($i -eq $Header.Length -1) {
+            $FormattedHeaders = "$FormattedHeaders["+ $Header[$i] + "]"
+        } else {
+            $FormattedHeaders = "$FormattedHeaders["+ $Header[$i] + "]$Delim"
+        }
+    }
+}
+Write-Host "reformatted headers looks like: $FormatterHeaders"
+
 if (-not($SkipFolderCreation)) {
     Write-Host 'Collecting unique Directory Names...'
 
@@ -315,13 +330,13 @@ if(-not ($CreateFoldersOnly)) {
                                 }
                             }
                         }
-                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + $Delim + $FileData
+                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + $FileData
                     } catch [System.IO.IOException] {
-                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + "Error reading or copying file: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName + $Delim + $FileData
+                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + $FileData + $Delim + "Error reading or copying file: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
                     } catch {
                         Write-Host "An unknown error occurred:"
                         Write-Host $_.ScriptStackTrace
-                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + "Error processing: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName + $Delim + $FileData
+                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + $FileData + $Delim + "Error processing: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
                     }
                     $mutex.WaitOne() | Out-Null
                     $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
@@ -350,7 +365,7 @@ if(-not ($CreateFoldersOnly)) {
         $jobs = while ($i -lt $files.Count) {
             $fileBatch = $files[$i..$j]
             $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory) ([Ref]$LognameBaseName)
-            Add-Content -Path $LogName -Value "[INFO]$Delim[SrcFilename]$Delim[SrcHash]$Delim[DestFilename]$Delim[DestHash]$Delim[Error]$Delim[ErrorDestination]$Delim[CDocID]$Delim[CVersion]$Delim[CIdentifier]$Delim[LatestRevisionNo]"
+            Add-Content -Path $LogName -Value $FormattedHeaders #"[INFO]$Delim[SrcFilename]$Delim[SrcHash]$Delim[DestFilename]$Delim[DestHash]$Delim[Error]$Delim[ErrorDestination]$Delim[CDocID]$Delim[CVersion]$Delim[CIdentifier]$Delim[LatestRevisionNo]"
             Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock  -ThrottleLimit $NumConcurrentJobs
 
             $batch = $batch + 1
@@ -366,7 +381,7 @@ if(-not ($CreateFoldersOnly)) {
         $DummyFileBatch = $files[$i..$DryRunNum]
         $batch = 1
         $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory) ([Ref]$LognameBaseName)
-        Add-Content -Path $LogName -Value "[INFO]$Delim[SrcFilename]$Delim[SrcHash]$Delim[DestFilename]$Delim[DestHash]$Delim[Error]$Delim[ErrorDestination]$Delim[CDocID]$Delim[CVersion]$Delim[CIdentifier]$Delim[LatestRevisionNo]"
+        Add-Content -Path $LogName -Value $FormattedHeaders #"[INFO]$Delim[SrcFilename]$Delim[SrcHash]$Delim[DestFilename]$Delim[DestHash]$Delim[Error]$Delim[ErrorDestination]$Delim[CDocID]$Delim[CVersion]$Delim[CIdentifier]$Delim[LatestRevisionNo]"
         & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly
         Write-Host 'That wasn''t so bad was it..?'
     }
