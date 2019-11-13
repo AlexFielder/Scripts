@@ -45,7 +45,7 @@ Param(
     [int] $DryRunNum = 100,
     [Boolean] $VerifyOnly = $false,
     [String] $Delim = '|',
-    [Boolean] $SkipFolderCreation = $false,
+    [Boolean] $SkipFolderCreation = $true, #$false,
     [Boolean] $CreateFoldersOnly = $false,
     [String[]] $Header = ('srcfilename', 'destfilename', 'CDocID', 'CVersion', 'CIdentifier', 'LatestRevisionNo')
 )
@@ -153,7 +153,7 @@ function createLog {
 
 Write-Host 'Loading CSV data into memory...'
 
-$files = Import-Csv -path $FileList -Delimiter $Delim -Header $Header #| Select-Object SrcFileName, DestFileName
+$files = Import-Csv -path $FileList -Delimiter $Delim | Select-Object $Header #SrcFileName, DestFileName #$files = Import-Csv -path $FileList -Delimiter $Delim -Header $Header #| Select-Object SrcFileName, DestFileName
 
 Write-Host 'CSV Data loaded...'
 if (-not($SkipFolderCreation)) {
@@ -219,7 +219,7 @@ if (-not($SkipFolderCreation)) {
     if (-not ($DryRun)) {
         $jobs = while ($i -lt $folders.Count) {
             $fileBatch = $folders[$i..$j]
-            $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory, [Ref]$LognameBaseName) -FileNameSeed "Folders"
+            $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory) ([Ref]$LognameBaseName) -FileNameSeed "Folders"
             Add-Content -Path $LogName -Value "[INFO]|[Folder]|[FolderCreated]"
             Start-ThreadJob -Name "Folders-$jobName" -ArgumentList $fileBatch, $LogName, $Delim -ScriptBlock $scriptBlockFolders  -ThrottleLimit $NumConcurrentJobs
     
@@ -235,7 +235,7 @@ if (-not($SkipFolderCreation)) {
         Write-Host 'Going in Dry...'
         $DummyFolderBatch = $folders[$i..$DryRunNum]
         $batch = 1
-        $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory, [Ref]$LognameBaseName) -FileNameSeed "Folders"
+        $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory) ([Ref]$LognameBaseName) -FileNameSeed "Folders"
         Add-Content -Path $LogName -Value "[INFO]|[Folder]|[FolderCreated]"
         & $scriptBlockFolders -filesInBatch $DummyFolderBatch -LogFileName $LogName
         Write-Host 'That wasn''t so bad was it..?'
@@ -291,7 +291,7 @@ if(-not ($CreateFoldersOnly)) {
                                     copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
                                 }
                             }
-                            $srcHash = (Get-FileHash -Path [Management.Automation.WildcardPattern]::Escape($f.srcFileName) -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
+                            $srcHash = (Get-FileHash -LiteralPath $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
                             $SrcInfo = $f.srcFileName + $Delim + $srcHash
                         } else {
                             $SrcInfo = $f.srcFileName + $Delim + "not found."
@@ -299,7 +299,7 @@ if(-not ($CreateFoldersOnly)) {
                         
 
                         if (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
-                            $destHash = (Get-FileHash -Path [Management.Automation.WildcardPattern]::Escape($f.destFileName) -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
+                            $destHash = (Get-FileHash -LiteralPath $f.destFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
                             $DestInfo = $f.destFileName + $Delim + $destHash
                         } else {
                             $DestInfo = $f.destFileName + $Delim + "not found at location."
@@ -307,11 +307,11 @@ if(-not ($CreateFoldersOnly)) {
                         # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
                         [String[]] $FileData = ''
                         foreach ($s in $Header) {
-                            if (-not ($s -eq 'srcfilename')  -and (-not ($s -eq 'destfilename')) {
-                                $FileData = ($FileData, $Delim, $s)
+                            if (-not ($s -eq 'srcfilename')  -and (-not ($s -eq 'destfilename'))) {
+                                $FileData = $Delim, $FileData, $Delim, $f.$s
                             }
                         }
-                        $info = $SrcInfo + $Delim + $DestInfo 
+                        $info = $SrcInfo + $Delim + $DestInfo + $FileData[0]
                     } catch [System.IO.IOException] {
                         $info = $SrcInfo + $Delim + $DestInfo + $Delim + "Error reading or copying file: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
                     } catch {
@@ -341,12 +341,12 @@ if(-not ($CreateFoldersOnly)) {
     $batch = 1
     # $LogName = ""
 
-    Write-Host 'Creating jobs...'
+    Write-Host 'Creating File Copy jobs...'
     if (-not ($DryRun)) {
         $jobs = while ($i -lt $files.Count) {
             $fileBatch = $files[$i..$j]
-            $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
-            Add-Content -Path $LogName -Value "[INFO]$Delim[SrcFilename]$Delim[SrcHash]$Delim[DestFilename]$Delim[DestHash]$Delim[Error]$Delim[ErrorDestination]$Delim[CDocId]$Delim[CDocID]$Delim[CVersion]$Delim[CIdentifier]$Delim[LatestRevisionNo]"
+            $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory) ([Ref]$LognameBaseName)
+            Add-Content -Path $LogName -Value "[INFO]$Delim[SrcFilename]$Delim[SrcHash]$Delim[DestFilename]$Delim[DestHash]$Delim[Error]$Delim[ErrorDestination]$Delim[CDocID]$Delim[CVersion]$Delim[CIdentifier]$Delim[LatestRevisionNo]"
             Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim -ScriptBlock $scriptBlock  -ThrottleLimit $NumConcurrentJobs
 
             $batch = $batch + 1
@@ -361,8 +361,8 @@ if(-not ($CreateFoldersOnly)) {
         Write-Host 'Going in Dry...'
         $DummyFileBatch = $files[$i..$DryRunNum]
         $batch = 1
-        $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory)
-        Add-Content -Path $LogName -Value "[INFO]$Delim[SrcFilename]$Delim[SrcHash]$Delim[DestFilename]$Delim[DestHash]$Delim[Error]$Delim[ErrorDestination]$Delim[CDocId]$Delim[CDocID]$Delim[CVersion]$Delim[CIdentifier]$Delim[LatestRevisionNo]"
+        $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory) ([Ref]$LognameBaseName)
+        Add-Content -Path $LogName -Value "[INFO]$Delim[SrcFilename]$Delim[SrcHash]$Delim[DestFilename]$Delim[DestHash]$Delim[Error]$Delim[ErrorDestination]$Delim[CDocID]$Delim[CVersion]$Delim[CIdentifier]$Delim[LatestRevisionNo]"
         & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly
         Write-Host 'That wasn''t so bad was it..?'
     }
