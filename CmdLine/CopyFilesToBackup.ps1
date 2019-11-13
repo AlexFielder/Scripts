@@ -47,7 +47,7 @@ Param(
     [String] $Delim = '|',
     [Boolean] $SkipFolderCreation = $true, #$false,
     [Boolean] $CreateFoldersOnly = $false,
-    [String[]] $Header = ('INFO','srcfilename', 'srcHash','destfilename','destHash', 'CDocID', 'CVersion', 'CIdentifier', 'LatestRevisionNo','error','errorDestination')
+    [String[]] $Header = ('INFO','srcfilename', 'srcHash','destfilename','destHash', 'ConisioDocID', 'ConisioVersion', 'ConisioIdentifier', 'LatestRevisionNo','error','errorDestination')
 )
 <# disabling Windows Defender settings#>
 Write-Host "Turning off Windows Defender 'RealtimeMonitoring' because it REALLY hampers performance!"
