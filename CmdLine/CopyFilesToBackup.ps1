@@ -41,11 +41,11 @@ Param(
     [String] $JobName = "BatchCopyJob",
     [int] $FilesPerBatch = 1000,
     [String] $LogName,
-    [Boolean] $DryRun = $true, #$false,
+    [Boolean] $DryRun = $false, #$true, #
     [int] $DryRunNum = 100,
     [Boolean] $VerifyOnly = $false,
     [String] $Delim = '|',
-    [Boolean] $SkipFolderCreation = $true, #$false,
+    [Boolean] $SkipFolderCreation = $false, #$true, #
     [Boolean] $CreateFoldersOnly = $false,
     [String[]] $Header = ('INFO','srcfilename', 'srcHash','destfilename','destHash', 'ConisioDocID', 'ConisioVersion', 'ConisioIdentifier', 'LatestRevisionNo','error','errorDestination')
 )
