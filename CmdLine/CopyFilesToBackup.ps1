@@ -25,12 +25,16 @@ Default is Pipe '|' because some files can have ',' in their name!
 Default is false.
 .PARAMETER CreateFoldersOnly
 Default is false.
+.PARAMETER Header
+Default is: ('INFO','srcfilename', 'srcHash','destfilename','destHash', 'ConisioDocID', 'ConisioVersion', 'ConisioIdentifier', 'LatestRevisionNo','error','errorDestination')
+This can be added to/amended by passing a value; otherwise we use the default ^
 .EXAMPLE
 to run using defaults just call this file:
 .\CopyFilesToBackup
 to run using anything else use this syntax:
 .\CopyFilesToBackup -filelist C:\path\to\list\of\files\to\copy.txt -NumCopyThreads 20 -LogName C:\temp\backup.log -CopyMethod Runspace
 .\CopyFilesToBackup -FileList .\copytest.csv -NumCopyThreads 30 -Verbose
+.\CopyFilesToBackup.ps1 -FileList '\\servername\path\to\csv\headersmustbeinHeaderabove.csv' -NumConcurrentJobs 40 -JobName 'UseAUniqueName' -FilesPerBatch 250 -LogName '\\servername\path\to\log\file.log' -VerifyOnly $true -SkipFolderCreation $true -CreateFoldersOnly $false
 .NOTES
 #>
 
