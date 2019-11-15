@@ -305,6 +305,8 @@ if(-not ($CreateFoldersOnly)) {
                     [string] $DestInfo = ""
                     <# Try Catch added from here: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_try_catch_finally?view=powershell-6 #>
                     try {
+                        $SrcInfo = $f.srcFileName + $Delim
+                        $DestInfo = $f.destFileName + $Delim
                         if ((Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName))) -and (-not ((Get-Item $f.srcFileName) -is [System.IO.DirectoryInfo]))) {
                             if (-not $VerifyOnly) {
                                 if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName)))) {
@@ -312,17 +314,17 @@ if(-not ($CreateFoldersOnly)) {
                                 }
                             }
                             $srcHash = (Get-FileHash -LiteralPath $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
-                            $SrcInfo = $f.srcFileName + $Delim + $srcHash
+                            $SrcInfo = $SrcInfo + $srcHash
                         } else {
-                            $SrcInfo = $f.srcFileName + $Delim + "not found."
+                            $SrcInfo = $SrcInfo + "not found."
                         }
                         
 
                         if (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
                             $destHash = (Get-FileHash -LiteralPath $f.destFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
-                            $DestInfo = $f.destFileName + $Delim + $destHash
+                            $DestInfo = $DestInfo + $destHash
                         } else {
-                            $DestInfo = $f.destFileName + $Delim + "not found at location."
+                            $DestInfo = $DestInfo + "not found at location."
                         }
                         # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
                         [String] $FileData = ''
