@@ -167,9 +167,9 @@ for ($i = 0; $i -lt $Header.Length; $i++) {
         $FormattedHeaders = "["+ $Header[$i] + "]$Delim"
     } else {
         if($i -eq $Header.Length -1) {
-            $FormattedHeaders = "$FormattedHeaders["+ $Header[$i] + "]"
+            $FormattedHeaders = "$FormattedHeaders"+ $Header[$i]
         } else {
-            $FormattedHeaders = "$FormattedHeaders["+ $Header[$i] + "]$Delim"
+            $FormattedHeaders = "$FormattedHeaders"+ $Header[$i] + "$Delim"
         }
     }
 }
