@@ -53,6 +53,7 @@ Param(
     [Boolean] $CreateFoldersOnly = $false,
     [String[]] $Header = ('INFO','srcfilename', 'srcHash','destfilename','destHash', 'ConisioDocID', 'ConisioVersion', 'ConisioIdentifier', 'LatestRevisionNo','error','errorDestination')
 )
+#Requires -RunAsAdministrator
 <# disabling Windows Defender settings#>
 Write-Host "Turning off Windows Defender 'RealtimeMonitoring' because it REALLY hampers performance!"
 if (-not ((Get-MpPreference | Format-List DisableRealtimeMonitoring) -eq 1)) {
