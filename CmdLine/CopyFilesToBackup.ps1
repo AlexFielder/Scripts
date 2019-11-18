@@ -331,9 +331,9 @@ if(-not ($CreateFoldersOnly)) {
                                 }
                             }
                             $srcHash = (Get-FileHash -LiteralPath $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
-                            $SrcInfo = $SrcInfo + $srcHash
+                            $SrcInfo = $SrcInfo + $srcHash + $Delim
                         } else {
-                            $SrcInfo = $SrcInfo + "not found."
+                            $SrcInfo = $SrcInfo + "not found." + $Delim
                         }
                         if (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
                             $destHash = (Get-FileHash -LiteralPath $f.destFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
