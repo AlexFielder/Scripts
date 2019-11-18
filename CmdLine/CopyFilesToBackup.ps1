@@ -344,7 +344,7 @@ if(-not ($CreateFoldersOnly)) {
                     } catch {
                         Write-Host "An unknown error occurred:"
                         Write-Host $_.ScriptStackTrace
-                        $info = $SrcInfo + $Delim + $DestInfo + $Delim + $FileData + $Delim + "Error processing: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
+                        $info = $SrcInfo + $Delim + $DestInfo + $FileData + $Delim + "Error processing: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
                     }
                     $mutex.WaitOne() | Out-Null
                     $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
