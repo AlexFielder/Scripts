@@ -294,9 +294,10 @@ if(-not ($CreateFoldersOnly)) {
             [String]$LogFileName,
             [Boolean]$VerifyOnly,
             [String]$Delim,
-            [String[]]$Header)
+            [String[]]$Header,
+            [Boolean]$ForceOverwrite)
             function ProcessFileAndHashToLog {
-                param( [String]$LogFileName, [PSCustomObject]$FileColl, [Boolean] $VerifyOnly, [String] $Delim, [String[]]$Header)
+                param( [String]$LogFileName, [PSCustomObject]$FileColl, [Boolean] $VerifyOnly, [String] $Delim, [String[]]$Header, [Boolean]$ForceOverwrite)
                 foreach ($f in $FileColl) {
                     $mutex = New-object -typename 'Threading.Mutex' -ArgumentList $false, 'MyInterProcMutex'
                     [string] $srcHash = ""
@@ -311,6 +312,8 @@ if(-not ($CreateFoldersOnly)) {
                             if (-not $VerifyOnly) {
                                 if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName)))) {
                                     copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
+                                } elseif ((Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) -and $ForceOverwrite) {
+                                    copy-item -path $f.srcFileName -Destination $f.DestFileName -Force $true | Out-Null #-Verbose
                                 }
                             }
                             $srcHash = (Get-FileHash -LiteralPath $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
@@ -342,8 +345,8 @@ if(-not ($CreateFoldersOnly)) {
                     } catch [System.IO.IOException] {
                         $info = $SrcInfo + $DestInfo + $FileData + $Delim + "Error reading or copying file: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
                     } catch {
-                        Write-Host "An unknown error occurred:"
-                        Write-Host $_.ScriptStackTrace
+                        # Write-Host "An unknown error occurred:"
+                        # Write-Host $_.ScriptStackTrace
                         $info = $SrcInfo + $DestInfo + $FileData + $Delim + "Error processing: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
                     }
                     $mutex.WaitOne() | Out-Null
@@ -360,7 +363,7 @@ if(-not ($CreateFoldersOnly)) {
                     $mutex.ReleaseMutex() | Out-Null
                 }
             }
-            ProcessFileAndHashToLog -LogFileName $LogFileName -FileColl $filesInBatch -VerifyOnly $VerifyOnly -Delim $Delim -Header $Header
+            ProcessFileAndHashToLog -LogFileName $LogFileName -FileColl $filesInBatch -VerifyOnly $VerifyOnly -Delim $Delim -Header $Header -ForceOverwrite $ForceOverwrite
     }
 
     $i = 0
