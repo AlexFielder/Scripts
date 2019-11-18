@@ -395,7 +395,7 @@ if(-not ($CreateFoldersOnly)) {
         $batch = 1
         $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory) ([Ref]$LognameBaseName)
         Add-Content -Path $LogName -Value $FormattedHeaders
-        & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly -ForceOverwrite $ForceOverwrite
+        & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly -header $Header -ForceOverwrite $ForceOverwrite
         Write-Host 'That wasn''t so bad was it..?'
     }
 
