@@ -28,6 +28,8 @@ Default is false.
 .PARAMETER Header
 Default is: ('INFO','srcfilename', 'srcHash','destfilename','destHash', 'ConisioDocID', 'ConisioVersion', 'ConisioIdentifier', 'LatestRevisionNo','error','errorDestination')
 This can be added to/amended by passing a value; otherwise we use the default ^
+.PARAMETER ForceOverwrite
+Default is False. Use this in cases where the destination is known to exist and needs overwriting (typically because file is zero-length and/or incorrect)
 .EXAMPLE
 to run using defaults just call this file:
 .\CopyFilesToBackup
@@ -51,7 +53,8 @@ Param(
     [String] $Delim = '|',
     [Boolean] $SkipFolderCreation = $false, #$true, #
     [Boolean] $CreateFoldersOnly = $false,
-    [String[]] $Header = ('INFO','srcfilename', 'srcHash','destfilename','destHash', 'ConisioDocID', 'ConisioVersion', 'ConisioIdentifier', 'LatestRevisionNo','error','errorDestination')
+    [String[]] $Header = ('INFO','srcfilename', 'srcHash','destfilename','destHash', 'ConisioDocID', 'ConisioVersion', 'ConisioIdentifier', 'LatestRevisionNo','error','errorDestination'),
+    [Boolean]$ForceOverwrite = $false
 )
 #Requires -RunAsAdministrator
 <# disabling Windows Defender settings#>
@@ -377,7 +380,7 @@ if(-not ($CreateFoldersOnly)) {
             $fileBatch = $files[$i..$j]
             $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory) ([Ref]$LognameBaseName)
             Add-Content -Path $LogName -Value $FormattedHeaders #"[INFO]$Delim[SrcFilename]$Delim[SrcHash]$Delim[DestFilename]$Delim[DestHash]$Delim[Error]$Delim[ErrorDestination]$Delim[CDocID]$Delim[CVersion]$Delim[CIdentifier]$Delim[LatestRevisionNo]"
-            Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim, $Header -ScriptBlock $scriptBlock  -ThrottleLimit $NumConcurrentJobs
+            Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim, $Header, $ForceOverwrite -ScriptBlock $scriptBlock  -ThrottleLimit $NumConcurrentJobs
 
             $batch = $batch + 1
             $i = $j + 1
