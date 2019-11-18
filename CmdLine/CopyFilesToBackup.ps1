@@ -338,13 +338,13 @@ if(-not ($CreateFoldersOnly)) {
                                 }
                             }
                         }
-                        $info = $SrcInfo + $Delim + $DestInfo + $FileData
+                        $info = $SrcInfo + $DestInfo + $FileData
                     } catch [System.IO.IOException] {
-                        $info = $SrcInfo + $Delim + $DestInfo + $FileData + $Delim + "Error reading or copying file: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
+                        $info = $SrcInfo + $DestInfo + $FileData + $Delim + "Error reading or copying file: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
                     } catch {
                         Write-Host "An unknown error occurred:"
                         Write-Host $_.ScriptStackTrace
-                        $info = $SrcInfo + $Delim + $DestInfo + $FileData + $Delim + "Error processing: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
+                        $info = $SrcInfo + $DestInfo + $FileData + $Delim + "Error processing: " + $f.srcFileName + $Delim + "To destination: " + $f.destFileName
                     }
                     $mutex.WaitOne() | Out-Null
                     $DateTime = Get-date -Format "yyyy-MM-dd HH:mm:ss:fff"
