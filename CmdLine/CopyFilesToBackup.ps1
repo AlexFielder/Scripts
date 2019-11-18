@@ -379,7 +379,7 @@ if(-not ($CreateFoldersOnly)) {
         $jobs = while ($i -lt $files.Count) {
             $fileBatch = $files[$i..$j]
             $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory) ([Ref]$LognameBaseName)
-            Add-Content -Path $LogName -Value $FormattedHeaders #"[INFO]$Delim[SrcFilename]$Delim[SrcHash]$Delim[DestFilename]$Delim[DestHash]$Delim[Error]$Delim[ErrorDestination]$Delim[CDocID]$Delim[CVersion]$Delim[CIdentifier]$Delim[LatestRevisionNo]"
+            Add-Content -Path $LogName -Value $FormattedHeaders
             Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $VerifyOnly, $Delim, $Header, $ForceOverwrite -ScriptBlock $scriptBlock  -ThrottleLimit $NumConcurrentJobs
 
             $batch = $batch + 1
@@ -395,8 +395,8 @@ if(-not ($CreateFoldersOnly)) {
         $DummyFileBatch = $files[$i..$DryRunNum]
         $batch = 1
         $LogName = createLog -ThisLog $LogName -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory) ([Ref]$LognameBaseName)
-        Add-Content -Path $LogName -Value $FormattedHeaders #"[INFO]$Delim[SrcFilename]$Delim[SrcHash]$Delim[DestFilename]$Delim[DestHash]$Delim[Error]$Delim[ErrorDestination]$Delim[CDocID]$Delim[CVersion]$Delim[CIdentifier]$Delim[LatestRevisionNo]"
-        & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly
+        Add-Content -Path $LogName -Value $FormattedHeaders
+        & $scriptBlock -filesInBatch $DummyFileBatch -LogFileName $LogName -Delim $Delim -VerifyOnly $VerifyOnly -ForceOverwrite $ForceOverwrite
         Write-Host 'That wasn''t so bad was it..?'
     }
 
