@@ -322,24 +322,29 @@ if(-not ($CreateFoldersOnly)) {
                                 }
                             }
                         }
-                        if ((Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName))) -and (-not ((Get-Item $f.srcFileName) -is [System.IO.DirectoryInfo]))) {
-                            if (-not $VerifyOnly) {
-                                if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName)))) {
-                                    copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
-                                } elseif ((Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) -and $ForceOverwrite) {
-                                    copy-item -path $f.srcFileName -Destination $f.DestFileName -Force #| Out-Null #-Verbose
+                        if (-not ($f.destFileName -like '*|ignore|*')) {
+                            if ((Test-path([Management.Automation.WildcardPattern]::Escape($f.srcFileName))) -and (-not ((Get-Item $f.srcFileName) -is [System.IO.DirectoryInfo]))) {
+                                if (-not $VerifyOnly) {
+                                    if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName)))) {
+                                        copy-item -path $f.srcFileName -Destination $f.DestFileName | Out-Null #-Verbose
+                                    } elseif ((Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) -and $ForceOverwrite) {
+                                        copy-item -path $f.srcFileName -Destination $f.DestFileName -Force #| Out-Null #-Verbose
+                                    }
                                 }
+                                $srcHash = (Get-FileHash -LiteralPath $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
+                                $SrcInfo = $SrcInfo + $srcHash + $Delim
+                            } else {
+                                $SrcInfo = $SrcInfo + "not found." + $Delim
                             }
-                            $srcHash = (Get-FileHash -LiteralPath $f.srcFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testingif (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
-                            $SrcInfo = $SrcInfo + $srcHash + $Delim
+                            if (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
+                                $destHash = (Get-FileHash -LiteralPath $f.destFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
+                                $DestInfo = $DestInfo + $destHash
+                            } else {
+                                $DestInfo = $DestInfo + "not found at location."
+                            }
                         } else {
-                            $SrcInfo = $SrcInfo + "not found." + $Delim
-                        }
-                        if (Test-path([Management.Automation.WildcardPattern]::Escape($f.destFileName))) {
-                            $destHash = (Get-FileHash -LiteralPath $f.destFileName -Algorithm SHA1).Hash # SHA1).Hash | Out-Null #could also use MD5 here but it needs testing
-                            $DestInfo = $DestInfo + $destHash
-                        } else {
-                            $DestInfo = $DestInfo + "not found at location."
+                            $SrcInfo = $SrcInfo + 'on ignored list' + $Delim
+                            $DestInfo = $DestInfo + 'on ignored list'
                         }
                         # if (-not ($null -eq $destHash) -and -not ($null -eq $srcHash)) {
 
