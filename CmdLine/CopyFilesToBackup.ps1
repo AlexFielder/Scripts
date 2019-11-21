@@ -167,7 +167,7 @@ Write-Host "reformatting list of $Header"
 
 for ($i = 0; $i -lt $Header.Length; $i++) {
     if ($FormattedHeaders -eq "") {
-        $FormattedHeaders = "["+ $Header[$i] + "]$Delim"
+        $FormattedHeaders = $Header[$i] + $Delim
     } else {
         if($i -eq $Header.Length -1) {
             $FormattedHeaders = "$FormattedHeaders"+ $Header[$i]
