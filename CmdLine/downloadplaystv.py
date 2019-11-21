@@ -12,9 +12,9 @@ from re import sub
 from json import load
 from urllib.request import urlretrieve, urlopen
 
-def safe_title(index, title):
+def safe_title(index, title, stamp):
     only_chars = sub(r'[^\w]+', '_', title).strip("_")
-    return f"{index} - {only_chars}.mp4"[:255]
+    return f"{index} - {only_chars} - {stamp}.mp4"[:255]
 
 def get_playstv_videos(user_id):
     last_id = ""
@@ -27,19 +27,21 @@ def get_playstv_videos(user_id):
 
     for index,item in enumerate(items, start=1):
         description = item["description"]
-        title = safe_title(index,description)
+        created = item["created"] / 1000
+        print("time.localtime:created: " + time.ctime(created) )
+        stamp = time.strftime('%Y-%m-%d', time.localtime(created)) #time.ctime(created)
+        title = safe_title(index,description,stamp)
         if "downloadUrl" in item:
             url = item["downloadUrl"]
         else:
             url = item["src"]
 
-        print(title, url)
+        print(title, url, item["created"])
         try:
             urlretrieve(url, title)
             try:
-                created = item["created"] / 1000
-                stamp = time.strftime('%m/%d/%Y %H:%M:%S', time.localtime(created))
-                os.utime(title,stamp)
+                print("Video date: " + stamp)
+                os.utime(title,(created, created)) #(stamp, stamp))
                 # command = 'SetFile -d \"' + stamp + '\" \"' + title + '\"'
                 # os.system(command)
             except Exception as e:
