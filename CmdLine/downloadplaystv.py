@@ -12,9 +12,10 @@ from re import sub
 from json import load
 from urllib.request import urlretrieve, urlopen
 
-def safe_title(index, title, stamp):
+def safe_title(index, title, stamp,gameTitle):
     only_chars = sub(r'[^\w]+', '_', title).strip("_")
-    return f"{index} - {only_chars} - {stamp}.mp4"[:255]
+    game_Title_chars = sub(r'[^\w]+', '_', gameTitle).strip(":")
+    return f"{index} - {only_chars} - {game_Title_chars} - {stamp}.mp4"[:255]
 
 def get_playstv_videos(user_id):
     last_id = ""
@@ -30,7 +31,8 @@ def get_playstv_videos(user_id):
         created = item["created"] / 1000
         print("time.localtime:created: " + time.ctime(created) )
         stamp = time.strftime('%Y-%m-%d', time.localtime(created)) #time.ctime(created)
-        title = safe_title(index,description,stamp)
+        gameTitle = item["gameTitle"]
+        title = safe_title(index,description,stamp,gameTitle)
         if "downloadUrl" in item:
             url = item["downloadUrl"]
         else:
