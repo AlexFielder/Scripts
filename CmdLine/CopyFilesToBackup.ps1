@@ -30,6 +30,8 @@ Default is: ('INFO','srcfilename', 'srcHash','destfilename','destHash', 'Conisio
 This can be added to/amended by passing a value; otherwise we use the default ^
 .PARAMETER ForceOverwrite
 Default is False. Use this in cases where the destination is known to exist and needs overwriting (typically because file is zero-length and/or incorrect)
+.PARAMETER GroupBySrcServer
+Default is false. Use this to group source data by srcfilename (i.e. by server) when data is UNION from SQL.
 .EXAMPLE
 to run using defaults just call this file:
 .\CopyFilesToBackup
@@ -54,7 +56,8 @@ Param(
     [Boolean] $SkipFolderCreation = $false, #$true, #
     [Boolean] $CreateFoldersOnly = $false,
     [String[]] $Header = ('INFO','srcfilename', 'srcHash','destfilename','destHash', 'ConisioDocID', 'ConisioVersion', 'ConisioIdentifier', 'LatestRevisionNo','error','errorDestination'),
-    [Boolean]$ForceOverwrite = $false
+    [Boolean]$ForceOverwrite = $false,
+    [Boolean]$GroupBySrcServer = $false
 )
 #Requires -RunAsAdministrator
 <# disabling Windows Defender settings#>
@@ -160,6 +163,10 @@ function createLog {
 
 Write-Host 'Loading CSV data into memory...'
 $files = Import-Csv -path $FileList -Delimiter $Delim | Select-Object $Header #SrcFileName, DestFileName #$files = Import-Csv -path $FileList -Delimiter $Delim -Header $Header #| Select-Object SrcFileName, DestFileName
+# if ($GroupBySrcServer) {
+#     $servers = $files | Where-Object {$_.srcFileName -match '\\\\(.*?)\\'} | get-unique 
+#     # $files = $files | group-Object -Property srcfilename | 
+# }
 Write-Host 'CSV Data loaded...'
 
 Write-Host "reformatting list of $Header"
