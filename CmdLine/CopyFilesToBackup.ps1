@@ -32,6 +32,8 @@ This can be added to/amended by passing a value; otherwise we use the default ^
 Default is False. Use this in cases where the destination is known to exist and needs overwriting (typically because file is zero-length and/or incorrect)
 .PARAMETER GroupBySrcServer
 Default is false. Use this to group source data by srcfilename (i.e. by server) when data is UNION from SQL.
+.PARAMETER JobType
+Default is 0 - i.e. standard copy. Available options are 1 = CAD, 2 = DOCS
 .EXAMPLE
 to run using defaults just call this file:
 .\CopyFilesToBackup
@@ -57,7 +59,8 @@ Param(
     [Boolean] $CreateFoldersOnly = $false,
     [String[]] $Header = ('INFO','srcfilename', 'srcHash','destfilename','destHash', 'ConisioDocID', 'ConisioVersion', 'ConisioIdentifier', 'LatestRevisionNo','error','errorDestination'),
     [Boolean]$ForceOverwrite = $false,
-    [Boolean]$GroupBySrcServer = $false
+    [Boolean]$GroupBySrcServer = $false,
+    [int] $JobType = 0
 )
 #Requires -RunAsAdministrator
 <# disabling Windows Defender settings#>
