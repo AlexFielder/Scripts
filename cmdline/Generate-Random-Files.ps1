@@ -45,10 +45,61 @@ Param(
     [int] $numProjects = 50,
     [String] $FileList = "",
     [int] $NumConcurrentJobs =25,
-    [int] $FilesPerBatch = 1000
+    [int] $FilesPerBatch = 1000,
+    [String] $LogName
 ) 
+#Requires -RunAsAdministrator
+<# disabling Windows Defender settings#>
+Write-Host "Turning off Windows Defender 'RealtimeMonitoring' because it REALLY hampers performance!"
+if (-not ((Get-MpPreference | Format-List DisableRealtimeMonitoring) -eq 1)) {
+    Set-MpPreference -DisableRealtimeMonitoring 1
+}
+Write-Host "disabling Windows Search because it hampers performance!"
+$SearchService = Get-Service -Name 'WSearch'
+if ($SearchService.Status -eq 'Running') {
+    $SearchService | Stop-Service -Force
+}
+$SearchService | Set-Service -StartupType Disable
 
 [int] $fileCount = 0
+
+$dtStart = [datetime]::UtcNow
+[String] $LogDirectory = ""
+[String] $LognameBaseName = ""
+function createLog {
+    param([String]$ThisLog, [string] $FileListPath, [int] $JobNum, [Ref]$LogDirectory, [Ref]$LognameBaseName, [string]$FileNameSeed) 
+    if ($ThisLog -eq "") {
+        if ($null -eq $LogDirectory) { $LogDirectory = "" }
+        if ($null -eq $LognameBaseName) { $LognameBaseName = "" }
+        [System.IO.Fileinfo]$CsvPath = $FileListPath
+        $LogDirectory.Value = $CsvPath.DirectoryName
+        $LognameBaseName.Value = $CsvPath.BaseName
+        if ($JobNum -eq 0) {
+            if ($FileNameSeed -eq "") {
+                $ThisLog = $LogDirectory.Value + "\" + $LognameBaseName.Value + ".log"
+            } else {
+                $ThisLog = $LogDirectory.Value + "\" + $FileNameSeed + ".txt"
+            }
+        } else {
+            if ($FileNameSeed -eq "") {
+                $ThisLog = $LogDirectory.Value + "\" + $LognameBaseName.Value + "-$JobNum.log"
+            } else {
+                $ThisLog = $LogDirectory.Value + "\" + $FileNameSeed + "-$JobNum.txt"
+            }
+        }
+        if (-not (CreateFile($ThisLog)) ) { 
+            write-host "Unable to create log, exiting now!"
+            Break
+        }
+    }
+    else {
+        if (-not (CreateFile($ThisLog)) ) { 
+            write-host "Unable to create log, exiting now!"
+            Break
+        }
+    }
+    return $ThisLog
+}
 
 #create and start a stopwatch object to measure how long it all takes.
 $stopwatch = [Diagnostics.Stopwatch]::StartNew()
@@ -209,6 +260,8 @@ if ($FileList -eq "") {
         $fileBatch = $files[$i..$j]
         #Could add logging here, but do we really need it?
         $jobName = "FileCreate$batch"
+        $LogName = createLog -ThisLog "" -FileListPath $FileList -JobNum $batch ([Ref]$LogDirectory) ([Ref]$LognameBaseName)
+        Add-Content -Path $LogName -Value 'srcfilename | created'
         Start-ThreadJob -Name $jobName -ArgumentList $fileBatch, $LogName, $minfilesize, $maxfilesize -ScriptBlock $scriptBlockBatchFiles  -ThrottleLimit $NumConcurrentJobs
         $batch = $batch + 1
         $i = $j + 1
@@ -218,34 +271,15 @@ if ($FileList -eq "") {
     }
     Write-Host "Waiting for $($jobs.Count) jobs to complete..."
     Receive-Job -Job $jobs -Wait -AutoRemoveJob
-    # ForEach ($f in $files) {
-    #     [System.IO.Fileinfo]$DestinationFilePath = $f.SrcFileName
-    #     [String]$SourceDir = $DestinationFilePath.DirectoryName
-    #     try {
-    #         if(!(test-path "$SourceDir")){
-    #             New-Item -ItemType Directory -Path "$SourceDir"
-    #         }
-    #         $path = $f.SrcFileName
-    #     } catch {
-    #         $message = "failed create folder @ $SourceDir, error $($_.Exception.Message)" 
-    #         Throw $message
-    #     }
-    #     $filesize = Get-Random -Minimum $minfilesize -Maximum ($minfilesize * 2)
-    #     $data = new-object byte[] $filesize
-    #     (new-object Random).NextBytes($data)
-    #     try {
-    #         if (-not (Test-path([Management.Automation.WildcardPattern]::Escape($path)))) {
-    #             [IO.File]::WriteAllBytes([Management.Automation.WildcardPattern]::Escape($path), $data)
-    #         }
-    #     } catch {
-    #         $message = "failed to write data to $path, error $($_.Exception.Message)" 
-    #         Throw $message
-    #     }
-    # }
 }
 
+Write-Host 'Re-enabling Windows Defender Setting(s) if we modified them'
+if (-not ((Get-MpPreference | Format-List DisableRealtimeMonitoring) -eq 0)) {
+    Set-MpPreference -DisableRealtimeMonitoring 0
+}
+Write-host 'Re-enabling Windows Search Service if we disabled it'
+$SearchService | Set-Service -StartupType Automatic
+$SearchService | Start-Service
 
-# how long did it all take?
-$stopwatch.stop()
-$stopwatch
 Write-Output "Total new fileCount = " + $files.Count
+Write-Host "Total time lapsed: $([datetime]::UtcNow - $dtStart)"
