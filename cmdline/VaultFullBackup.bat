@@ -1,14 +1,14 @@
 @echo off
 setlocal enableDelayedExpansion
 echo setting up variables...
-SET VAULTBACKUPPATH=F:\Dropbox\Graitec\Vault Backup
+SET VAULTBACKUPPATH=C:\Users\alex.fielder\Dropbox\ManAndMachine\VaultBackup
 REM SET VAULTBACKUPPATH=F:\Onedrive For Business\OneDrive - GRAITEC\Vault Backup <-removed because OneDrive for business is b0rked.
 REM SET LOGFILEPATH=F:\Onedrive For Business\OneDrive - GRAITEC\GRA0387AF_Vault_Backup.txt
-SET LOGFILEPATH=F:\Dropbox\Graitec\GRA0387AF_Vault_Backup.txt
+SET LOGFILEPATH=C:\Users\alex.fielder\Dropbox\ManAndMachine\AFIELDER-P7760_Vault_Backup.txt
 REM SET SEVENZIPLOGFILEPATH=F:\Onedrive For Business\OneDrive - GRAITEC\GRA0387AF_Zip_Log.txt
-SET SEVENZIPLOGFILEPATH=F:\Dropbox\Graitec\GRA0387AF_Zip_Log.txt
+SET SEVENZIPLOGFILEPATH=C:\Users\alex.fielder\Dropbox\ManAndMachine\AFIELDER-P7760_Zip_Log.txt
 SET SEVENZIPPATH=C:\ProgramData\chocolatey\bin\7za.exe
-SET ADMSCONSOLEPATH=C:\Program Files\Autodesk\ADMS Professional 2019\ADMS Console\Connectivity.ADMSConsole.exe
+SET ADMSCONSOLEPATH=C:\Program Files\Autodesk\ADMS Professional 2022\ADMS Console\Connectivity.ADMSConsole.exe
 SET NUMDAYSBACKUPTOKEEP=-60
 SET MINMEMVALUE=2000000
 SET MINDRIVESPACE=10000000
@@ -23,15 +23,15 @@ REM if !AVAILABLESYSTEMMEMORY! LSS !MINMEMVALUE! (
 REM ) ELSE (
 	REM echo "%DATE% %TIME%: sufficient system memory, continuing" >> %LOGFILEPATH%
 REM )
-echo checking free disk space on F:\
-FOR /F "usebackq tokens=3" %%s IN (`DIR F:\ /-C /-O /W`) DO (
+echo checking free disk space on C:\
+FOR /F "usebackq tokens=3" %%s IN (`DIR C:\ /-C /-O /W`) DO (
 	SET FREE_SPACE=%%s
 )
 if !FREE_SPACE! LSS !MINDRIVESPACE! (
-	echo "%DATE% %TIME%: low space on F:, exiting" >> %LOGFILEPATH%
+	echo "%DATE% %TIME%: low space on C:, exiting" >> %LOGFILEPATH%
 	exit /b 1
 ) ELSE (
-	echo "%DATE% %TIME%: sufficient space on F:\, continuing" >> %LOGFILEPATH%
+	echo "%DATE% %TIME%: sufficient space on C:\, continuing" >> %LOGFILEPATH%
 )
 REM echo stopping and disabling Sophos
 REM wmic service where "caption like 'Sophos%%'" call Stopservice
