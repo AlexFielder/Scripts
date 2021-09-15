@@ -53,7 +53,7 @@ F:
 cd %VAULTBACKUPPATH%
 echo removing existing backup directories if there are any present
 for /f %%i in ('dir /a:d /b Vault*') do rd /s /q %%i
-echo performing vault backup from Vault Professional 2019
+echo performing vault backup from Vault Professional 2022
 REM -WA is short for Windows Authentication - does not work with Vault basic!
 call "%ADMSCONSOLEPATH%" -Obackup -B"%VAULTBACKUPPATH%" -WA -VAL -DBSC -S -L"%LOGFILEPATH%"
 
