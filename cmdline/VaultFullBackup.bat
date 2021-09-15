@@ -7,8 +7,8 @@ REM SET LOGFILEPATH=F:\Onedrive For Business\OneDrive - GRAITEC\GRA0387AF_Vault_
 SET LOGFILEPATH=C:\Users\alex.fielder\Dropbox\ManAndMachine\AFIELDER-P7760_Vault_Backup.txt
 REM SET SEVENZIPLOGFILEPATH=F:\Onedrive For Business\OneDrive - GRAITEC\GRA0387AF_Zip_Log.txt
 SET SEVENZIPLOGFILEPATH=C:\Users\alex.fielder\Dropbox\ManAndMachine\AFIELDER-P7760_Zip_Log.txt
-SET SEVENZIPPATH=C:\ProgramData\chocolatey\bin\7za.exe
-SET ADMSCONSOLEPATH=C:\Program Files\Autodesk\ADMS Professional 2022\ADMS Console\Connectivity.ADMSConsole.exe
+SET SEVENZIPPATH=C:\ProgramData\chocolatey\bin\7z.exe
+SET ADMSCONSOLEPATH=C:\Program Files\Autodesk\Vault Server 2022\ADMS Console\Connectivity.ADMSConsole.exe
 SET NUMDAYSBACKUPTOKEEP=-60
 SET MINMEMVALUE=2000000
 SET MINDRIVESPACE=10000000
@@ -48,24 +48,28 @@ NET STOP MSSQL$AUTODESKVAULT
 NET START MSSQL$AUTODESKVAULT
 IISRESET /RESTART
 
-echo changing to working folder
-F:
-cd %VAULTBACKUPPATH%
-echo removing existing backup directories if there are any present
-for /f %%i in ('dir /a:d /b Vault*') do rd /s /q %%i
-echo performing vault backup from Vault Professional 2022
-REM -WA is short for Windows Authentication - does not work with Vault basic!
-call "%ADMSCONSOLEPATH%" -Obackup -B"%VAULTBACKUPPATH%" -WA -VAL -DBSC -S -L"%LOGFILEPATH%"
-
-echo Beginning zip and verification using 7zip %date% - %time% >> "%SEVENZIPLOGFILEPATH%"
-for /f "Tokens=*" %%i in ('dir /a:d /b Vault*') do (
-echo creating a .7z archive of latest backup using the 7zip command line.
-call "%SEVENZIPPATH%" a -t7z "%%i.7z" "%%i" -mmt -mx1
-echo testing the archive - results can be found in the Vault backup log file!
-call "%SEVENZIPPATH%" t "%%i.7z" -mmt -r >> "%SEVENZIPLOGFILEPATH%"
+echo changing to working folder: "%VAULTBACKUPPATH%"
+REM F:
+IF EXIST "%VAULTBACKUPPATH%" (
+	cd %VAULTBACKUPPATH%
+	echo removing existing backup directories if there are any present
+	for /f %%i in ('dir /a:d /b Vault*') do rd /s /q %%i
+	echo performing vault backup from Vault Professional 2022
+	REM -WA is short for Windows Authentication - does not work with Vault basic!
+	REM NO DOMAIN means the -WA option doesn't work.
+	REM call "%ADMSCONSOLEPATH%" -Obackup -B"%VAULTBACKUPPATH%" -WA -VAL -DBSC -S -L"%LOGFILEPATH%"
+	call "%ADMSCONSOLEPATH%" -Obackup -B"%VAULTBACKUPPATH%" -VUAdministrator -VAL -DBSC -S -L"%LOGFILEPATH%"
 )
-echo completed zip and verification using 7zip %date% - %time% >> "%SEVENZIPLOGFILEPATH%"
-
+IF EXIST "%SEVENZIPPATH%" (
+	echo Beginning zip and verification using 7zip %date% - %time% >> "%SEVENZIPLOGFILEPATH%"
+	for /f "Tokens=*" %%i in ('dir /a:d /b Vault*') do (
+	echo creating a .7z archive of latest backup using the 7zip command line.
+	call "%SEVENZIPPATH%" a -t7z "%%i.7z" "%%i" -mmt -mx1
+	echo testing the archive - results can be found in the Vault backup log file!
+	call "%SEVENZIPPATH%" t "%%i.7z" -mmt -r >> "%SEVENZIPLOGFILEPATH%"
+	)
+	echo completed zip and verification using 7zip %date% - %time% >> "%SEVENZIPLOGFILEPATH%"
+)
 REM for /f "Tokens=*" %%i in ('dir /b Vault*.7z') do call "%SEVENZIPPATH%" t "%%i" -mmt -r >> "%SEVENZIPLOGFILEPATH%"
 
 echo removing backup directory to prevent Dropbox syncing it to the cloud.
