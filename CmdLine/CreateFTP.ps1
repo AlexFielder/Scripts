@@ -2,15 +2,15 @@
 Install-WindowsFeature -Name Web-Server -IncludeManagementTools
 
 #Install FTP feature
-Install-WindowsFeature -Name Web-Ftp-Server -IncludeAllSubFeature -IncludeManagementTools -Verbose
+Install-WindowsFeature -Name Web-Ftp-Server -IncludeAllSubFeature -IncludeManagementTools
 
 #Importing Web administration module
-Import-Module WebAdministration -Verbose
+Import-Module WebAdministration
 
 #Creating new FTP site
 $SiteName = "Demo FTP Site"
 $RootFolderpath = "C:\DemoFTPRoot"
-$PortNumber = 21
+$PortNumber = 990
 $FTPUserGroupName = "Demo FTP Users Group"
 $FTPUserName = "FtpUser"
 $FTPPassword = ConvertTo-SecureString "p@ssw0rd" -AsPlainText -Force
@@ -43,24 +43,32 @@ If (!(Get-LocalUser $FTPUserName -ErrorAction SilentlyContinue)) {
 Add-LocalGroupMember -Name $FTPUserGroupName -Member $FTPUserName -ErrorAction SilentlyContinue
 
 # Enabling basic authentication on the FTP site
-$param = @{
-    Path    = 'IIS:\Sites\Demo FTP Site'
-    Name    = 'ftpserver.security.authentication.basicauthentication.enabled'
-    Value   = $true 
-    Verbose = $True
-}
-Set-ItemProperty @param
+#copied from here: https://www.javaer101.com/en/article/39110147.html
+$session = Get-PSSession -Name WinPSCompatSession
+$sb = {Set-ItemProperty "IIS:\Sites\Demo FTP Site" -Name "ftpserver.security.authentication.basicauthentication.enabled" -Value $true -Verbose $true}
+Invoke-Command -Scriptblock $sb -Session $session
+
+# Enabling basic authentication on the FTP site
+# $param = @{
+#     Path    = 'IIS:\Sites\Demo FTP Site'
+#     Name    = 'ftpserver.security.authentication.basicauthentication.enabled'
+#     Value   = $true 
+#     Verbose = $True
+# }
+# Set-ItemProperty @param
 
 # Adding authorization rule to allow FTP users 
 # in the FTP group to access the FTP site
-$param = @{
-    PSPath   = 'IIS:\'
-    Location = $SiteName 
-    Filter   = '/system.ftpserver/security/authorization'
-    Value    = @{ accesstype = 'Allow'; roles = $FTPUserGroupName; permissions = 1 } 
-}
-
-Add-WebConfiguration @param
+# $param = @{
+#     PSPath   = 'IIS:\'
+#     Location = $SiteName 
+#     Filter   = '/system.ftpserver/security/authorization'
+#     Value    = @{ accesstype = 'Allow'; roles = $FTPUserGroupName; permissions = 1 } 
+# }
+$session = Get-PSSession -Name WinPSCompatSession
+$sb = {Add-WebConfiguration -PSPath "IIS:\" -Location $SiteName -Filter "/system.ftpserver/security/authorization" -Value @{ accesstype = 'Allow'; roles = $FTPUserGroupName; permissions = 1 }}
+Invoke-Command -Scriptblock $sb -Session $session
+# Add-WebConfiguration @param
 
 # Changing SSL policy of the FTP site
 'ftpServer.security.ssl.controlChannelPolicy', 'ftpServer.security.ssl.dataChannelPolicy' | 
