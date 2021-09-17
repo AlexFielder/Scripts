@@ -4,6 +4,9 @@ Install-WindowsFeature -Name Web-Server -IncludeManagementTools
 #Install FTP feature
 Install-WindowsFeature -Name Web-Ftp-Server -IncludeAllSubFeature -IncludeManagementTools -Verbose
 
+#Importing Web administration module
+Import-Module WebAdministration -Verbose
+
 #Creating new FTP site
 $SiteName = "Demo FTP Site"
 $RootFolderpath = "C:\DemoFTPRoot"
@@ -11,6 +14,9 @@ $PortNumber = 21
 $FTPUserGroupName = "Demo FTP Users Group"
 $FTPUserName = "FtpUser"
 $FTPPassword = ConvertTo-SecureString "p@ssw0rd" -AsPlainText -Force
+
+#create self-signed certificate
+New-SelfSignedCertificate -FriendlyName "selfsigned-localhost" -CertStoreLocation cert:\localmachine\my -DnsName localhost
 
 if (!(Test-Path $RootFolderpath)) {
     # if the folder doesn't exist
