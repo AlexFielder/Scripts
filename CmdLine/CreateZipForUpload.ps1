@@ -111,6 +111,11 @@ function GetFolderList([System.IO.DirectoryInfo]$dir, [string]$SearchPattern) {
 [System.IO.FileInfo]$TempFolder = $Folder
 $TempPath = $TempPath + "\" + $TempFolder.Name
 
+if([System.IO.Directory]::Exists($TempPath)) {
+    write-host "Temp folder already exists, deleting it now!"
+    [System.IO.Directory]::Delete($TempPath, $true)
+}
+
 Write-Host 'Creating log file if it does not exist...'
 $LogName = CreateLog -ThisLog $LogName -FolderPath $TempPath ([Ref]$LogDirectory) ([Ref]$LognameBaseName) -FileNameSeed $LogNameSeed
 
