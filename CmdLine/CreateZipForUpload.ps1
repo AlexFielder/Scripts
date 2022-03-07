@@ -3,6 +3,8 @@
 .SYNOPSIS
 Creates a .zip file of the given directory and removes specific subfolders
 from the archive.
+.PARAMETER Comment
+Appends the parameter value to the end of the filename.
 .DESCRIPTION
 This script creates a .zip file of the given directory and removes specific
 subfolders from the archive.
@@ -32,6 +34,8 @@ CreateZipForUpload.ps1
 
 [CmdletBinding()]
 Param(
+    [Parameter(Mandatory=$false)]
+    [string]$Comment = '',
     [Parameter(Mandatory=$false, Position=0)]
     [string]$Folder = 'C:\Users\alex.fielder\OneDrive\Inventor\Designs\Vista Engineering\Configurator\Template',
     [Parameter(Mandatory=$false, Position=1)]
@@ -135,7 +139,13 @@ ForEach-Object -InputObject $FoldersToRemoveFromTempPath -Process {
 # write today's date in YYYY-MM-DD format
 $Date = [datetime]::UtcNow
 $Date = $Date.ToString("yyyy-MM-dd")
-$Output = $Output + "\" + $TempFolder.Name + "-$($Date)-automated.zip"
+If ($Comment -ne '') {
+    $Comment = $Comment.Replace(" ", "")
+    $Output = $Output + "\" + $TempFolder.Name + "-$($Date)-automated" + '_' + $Comment + ".zip"
+} else {
+    $Output = $Output + "\" + $TempFolder.Name + "-$($Date)-automated.zip"
+}
+
 
 Set-Alias 7zip $7zipPath
 # install 7zip if it is not installed
