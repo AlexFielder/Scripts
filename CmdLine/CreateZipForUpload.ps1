@@ -141,7 +141,7 @@ $Date = [datetime]::UtcNow
 $Date = $Date.ToString("yyyy-MM-dd")
 If ($Comment -ne '') {
     $Comment = $Comment.Replace(" ", "")
-    $Output = $Output + "\" + $TempFolder.Name + "-$($Date)-automated" + '_' + $Comment + ".zip"
+    $Output = $Output + "\" + $TempFolder.Name + "-$($Date)-" + $Comment + ".zip"
 } else {
     $Output = $Output + "\" + $TempFolder.Name + "-$($Date)-automated.zip"
 }
