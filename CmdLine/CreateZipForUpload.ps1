@@ -5,6 +5,8 @@ Creates a .zip file of the given directory and removes specific subfolders
 from the archive.
 .PARAMETER Comment
 Appends the parameter value to the end of the filename.
+.PARAMETER NoDateStamp
+Removes the date stamp from the filename.
 .DESCRIPTION
 This script creates a .zip file of the given directory and removes specific
 subfolders from the archive.
@@ -36,6 +38,8 @@ CreateZipForUpload.ps1
 Param(
     [Parameter(Mandatory=$false)]
     [string]$Comment = '',
+    [Parameter(Mandatory=$false)]
+    [Boolean]$NoDateStamp = '',
     [Parameter(Mandatory=$false, Position=0)]
     [string]$Folder = 'C:\Users\alex.fielder\OneDrive\Inventor\Designs\Vista Engineering\Configurator\Template',
     [Parameter(Mandatory=$false, Position=1)]
@@ -141,9 +145,17 @@ $Date = [datetime]::UtcNow
 $Date = $Date.ToString("yyyy-MM-dd")
 If ($Comment -ne '') {
     $Comment = $Comment.Replace(" ", "")
-    $Output = $Output + "\" + $TempFolder.Name + "-$($Date)-" + $Comment + ".zip"
+    if ($NoDateStamp -eq $true) {
+        $Output = $Output + "\" + $TempFolder.Name + $Comment + ".zip"
+    } else {
+        $Output = $Output + "\" + $TempFolder.Name + "-$($Date)-" + $Comment + ".zip"
+    }
 } else {
-    $Output = $Output + "\" + $TempFolder.Name + "-$($Date)-automated.zip"
+    if ($NoDateStamp -eq $true) {
+        $Output = $Output + "\" + $TempFolder.Name + "-automated.zip"
+    } else {
+        $Output = $Output + "\" + $TempFolder.Name + "-$($Date)-automated.zip"
+    }
 }
 
 
