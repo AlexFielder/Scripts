@@ -41,13 +41,13 @@ Param(
     [Parameter(Mandatory=$false)]
     [Boolean]$NoDateStamp = '',
     [Parameter(Mandatory=$false, Position=0)]
-    [string]$Folder = 'C:\Users\alex.fielder\OneDrive\Inventor\Designs\Vista Engineering\Configurator\Template',
+    [string]$Folder = 'C:\Users\alex.fielder\OneDrive\Inventor\Designs\Vista Engineering\Configurator',
     [Parameter(Mandatory=$false, Position=1)]
     [string]$FoldersToRemove = '_V|Oldversions|nppBackup',
     [Parameter(Mandatory=$false, Position=2)]
     [string]$FilesToRemove = '*.bak',
     [Parameter(Mandatory=$false, Position=3)]
-    [string]$Output = 'C:\Users\alex.fielder\OneDrive\Inventor\Designs\Vista Engineering\Configurator',
+    [string]$Output = 'C:\Users\alex.fielder\OneDrive\Inventor\Designs\Vista Engineering',
     [Parameter(Mandatory=$false, Position=4)]
     [Boolean]$ForceOverwrite = $true,
     [String] $Delim = '|',
