@@ -1,0 +1,8 @@
+IF NOT EXIST "C:\Autodesk\AutodeskVaultRemoteContentDownload\" (
+	MKDIR "C:\Autodesk\AutodeskVaultRemoteContentDownload\"
+	)
+cd C:\Autodesk\AutodeskVaultRemoteContentDownload\
+curl -O https://download.autodesk.com/akn/2023/inventor_remote_content/custom.exe -O https://download.autodesk.com/akn/2023/inventor_remote_content/inventoransi.exe -O https://download.autodesk.com/akn/2023/inventor_remote_content/inventordin.exe -O https://download.autodesk.com/akn/2023/inventor_remote_content/inventorfeature.exe -O https://download.autodesk.com/akn/2023/inventor_remote_content/inventorgost.exe -O https://download.autodesk.com/akn/2023/inventor_remote_content/inventoridf.exe -O https://download.autodesk.com/akn/2023/inventor_remote_content/inventoriso.exe -O https://download.autodesk.com/akn/2023/inventor_remote_content/inventorjisgb.exe -O https://download.autodesk.com/akn/2023/inventor_remote_content/inventormoldmetricsub.exe -O https://download.autodesk.com/akn/2023/inventor_remote_content/inventorother.exe -O https://download.autodesk.com/akn/2023/inventor_remote_content/inventorparker.exe -O https://download.autodesk.com/akn/2023/inventor_remote_content/inventorroutedsystems.exe -O https://download.autodesk.com/akn/2023/inventor_remote_content/inventorsheetmetal.exe --ssl-no-revoke
+
+REM for /r "C:\Autodesk\AutodeskVaultRemoteContentDownload\" %%a in (*.exe) do start "" "%%~fa -s -d 'C:\Autodesk\Contentlibrary2023\'"
+Forfiles /p .\ /c "cmd /c @path -s^ -d^ 'C:\Autodesk\Contentlibrary2023\'"
