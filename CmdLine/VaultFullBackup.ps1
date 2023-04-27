@@ -143,7 +143,7 @@ if (Test-Path $SEVENZIPPATH) {
         Write-Host "Testing the archive - results can be found in the Vault backup log file!"
         Start-Process -FilePath $SEVENZIPPATH -ArgumentList "t", "$($VaultBackupFolderToZip).7z", "-mmt", "-r" -Wait >> $SEVENZIPLOGFILEPATH
     }
-    Write-Host "Completed zip and verification using 7zip $(Get-Date) - $(Get-Time) >> $SEVENZIPLOGFILEPATH"
+    Write-Host "Completed zip and verification using 7zip $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" >> $SEVENZIPLOGFILEPATH
 }
 
 If (Test-Path "$($VaultBackupFolderToZip).7z") {
