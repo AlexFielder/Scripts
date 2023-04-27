@@ -4,7 +4,7 @@ echo setting up variables...
 SET VAULTBACKUPPATH=C:\Users\alex.fielder\Dropbox\ManAndMachine\VaultBackup
 REM SET VAULTBACKUPPATH=F:\Onedrive For Business\OneDrive - GRAITEC\Vault Backup <-removed because OneDrive for business is b0rked.
 REM SET LOGFILEPATH=F:\Onedrive For Business\OneDrive - GRAITEC\GRA0387AF_Vault_Backup.txt
-SET LOGFILEPATH=C:\Users\alex.fielder\Dropbox\ManAndMachine\AFIELDER-P7760_Vault_Backup.txt
+SET LOGFILEPATH=C:\Users\alex.fielder\Dropbox\ManAndMachine\%computername%_Vault_Backup.txt
 REM SET SEVENZIPLOGFILEPATH=F:\Onedrive For Business\OneDrive - GRAITEC\GRA0387AF_Zip_Log.txt
 SET SEVENZIPLOGFILEPATH=C:\Users\alex.fielder\Dropbox\ManAndMachine\AFIELDER-P7760_Zip_Log.txt
 SET SEVENZIPPATH=C:\ProgramData\chocolatey\bin\7z.exe
@@ -39,7 +39,7 @@ REM wmic service where "caption like 'Sophos%%' and  Startmode<>'Disabled'" call
 echo pausing Dropbox, Searchindexer, Everything using the sysinternals tool PSSuspend!
 pssuspend dropbox
 pssuspend searchindexer
-pssuspend everything
+pssuspend everything64
 pssuspend onedrive
 
 REM THIS WILL STOP THE WEB SERVER AND "CYCLE" THE SQL SERVER
@@ -79,7 +79,7 @@ forfiles /p "%VAULTBACKUPPATH%" /s /m *.* /d "%NUMDAYSBACKUPTOKEEP%" /c "cmd /c 
 echo resuming Dropbox, Searchindexer, Everything and Sophos
 pssuspend -r dropbox
 pssuspend -r searchindexer
-pssuspend -r everything
+pssuspend -r everything64
 pssuspend -r onedrive
 REM wmic service where "caption like 'Sophos%%' and Startmode='Disabled'" call ChangeStartmode Automatic
 REM wmic service where "caption like 'Sophos%%'" call Startservice

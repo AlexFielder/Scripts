@@ -74,3 +74,6 @@ GRA0387AF-Vault-2017_Configuration.cfg
 DuckieTV/
 *.pkl
 *.log
+CmdLine/OF-Cookies-Export.py
+CmdLine/ShitlordsContentExport.py
+CmdLine/skip_tpm_check.cmd
