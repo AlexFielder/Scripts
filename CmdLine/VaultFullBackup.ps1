@@ -51,7 +51,7 @@ if ($freeSpace -lt $MINDRIVESPACE) {
 }
 
 <# disabling Windows Defender settings#>
-Write-Host "Turning off Windows Defender 'RealtimeMonitoring' because it REALLY hampers performance!"
+Write-Host "Turning off Windows Defender 'RealtimeMonitoring' because it REALLY hampers performance!" >> $LOGFILEPATH
 if (-not ((Get-MpPreference | Format-List DisableRealtimeMonitoring) -eq 1)) {
     Set-MpPreference -DisableRealtimeMonitoring 1
 }
@@ -63,13 +63,13 @@ if ($SearchService.Status -eq 'Running') {
 }
 $SearchService | Set-Service -StartupType Disable
 
-Write-Host "pausing Dropbox, Searchindexer, Everything using the sysinternals tool PSSuspend!"
+Write-Host "pausing Dropbox, Searchindexer, Everything using the sysinternals tool PSSuspend!" >> $LOGFILEPATH
 pssuspend.exe dropbox
 pssuspend.exe searchindexer
 pssuspend.exe everything64
 pssuspend.exe onedrive
 
-Write-Host "Attempting to determine installed AntiVirus software"
+Write-Host "Attempting to determine installed AntiVirus software" >> $LOGFILEPATH
 
 function Get-AntivirusProcessName {
     $antivirusSoftware = @(
@@ -99,14 +99,14 @@ function Get-AntivirusProcessName {
 
 $antivirusProcessName = Get-AntivirusProcessName
 if ($antivirusProcessName) {
-    Write-Host "Antivirus software detected. Pausing $antivirusProcessName using PSSuspend"
+    Write-Host "Antivirus software detected. Pausing $antivirusProcessName using PSSuspend" >> $LOGFILEPATH
     pssuspend.exe $antivirusProcessName
 } else {
-    Write-Host "No antivirus software detected, continuing"
+    Write-Host "No antivirus software detected, continuing" >> $LOGFILEPATH
 }
 
 
-Write-Host "THIS WILL STOP THE WEB SERVER AND 'CYCLE' THE SQL SERVER"
+Write-Host "THIS WILL STOP THE WEB SERVER AND 'CYCLE' THE SQL SERVER" >> $LOGFILEPATH
 
 IISReset.exe /STOP
 Stop-Service 'MSSQL$AUTODESKVAULT'
@@ -121,15 +121,15 @@ if (-not (Test-Path $VAULTBACKUPPATH)) {
 
 Set-Location $VAULTBACKUPPATH
 
-Write-Host "removing existing backup directories if there are any present"
+Write-Host "removing existing backup directories if there are any present" >> $LOGFILEPATH
 Get-ChildItem -Path $VAULTBACKUPPATH -Directory -Filter Vault* | Remove-Item -Recurse -Force
-Write-Host "performing vault backup from Vault Professional $($ADMSCONSOLEYEAR)"
+Write-Host "performing vault backup from Vault Professional $($ADMSCONSOLEYEAR)" >> $LOGFILEPATH
 # -WA is short for Windows Authentication - does not work with Vault basic!
 # NO DOMAIN means the -WA option doesn't work.
 # call "$ADMSCONSOLEPATH" -Obackup -B"$VAULTBACKUPPATH" -WA -VAL -DBSC -S -L"$LOGFILEPATH"
 Start-Process -FilePath $ADMSCONSOLEPATH -ArgumentList "-Obackup", "-B$VAULTBACKUPPATH", "-VUAdministrator", "-VAL", "-DBSC", "-S", "-L$LOGFILEPATH" -Wait
 
-Write-Host "Zip and verify the backup using 7zip"
+Write-Host "Zip and verify the backup using 7zip" >> $LOGFILEPATH
 
 $VaultBackupFolderToZip = ""
 
@@ -138,46 +138,46 @@ if (Test-Path $SEVENZIPPATH) {
 
     Get-ChildItem -Directory -Filter "Vault*" | ForEach-Object {
         $VaultBackupFolderToZip = $_.Name
-        Write-Host "Creating a .7z archive of latest backup using the 7zip command line."
+        Write-Host "Creating a .7z archive of latest backup using the 7zip command line." >> $LOGFILEPATH
         Start-Process -FilePath $SEVENZIPPATH -ArgumentList "a", "-t7z", "$($VaultBackupFolderToZip).7z", "$($VaultBackupFolderToZip)", "-mmt", "-mx1" -Wait
-        Write-Host "Testing the archive - results can be found in the Vault backup log file!"
+        Write-Host "Testing the archive - results can be found in the Vault backup log file!" >> $LOGFILEPATH
         Start-Process -FilePath $SEVENZIPPATH -ArgumentList "t", "$($VaultBackupFolderToZip).7z", "-mmt", "-r" -Wait >> $SEVENZIPLOGFILEPATH
     }
     Write-Host "Completed zip and verification using 7zip $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" >> $SEVENZIPLOGFILEPATH
 }
 
 If (Test-Path "$($VaultBackupFolderToZip).7z") {
-    Write-Host "Removing the unzipped backup directory to prevent Dropbox syncing it to the cloud"
+    Write-Host "Removing the unzipped backup directory to prevent Dropbox syncing it to the cloud" >> $LOGFILEPATH
     Get-ChildItem -Directory -Filter "Vault*" | Remove-Item -Recurse -Force
 } else {
-    Write-Host "no .7z file found, using Windows built-in compression"
+    Write-Host "no .7z file found, using Windows built-in compression" >> $LOGFILEPATH
     Get-ChildItem -Directory -Filter "Vault*" | ForEach-Object {
-        Write-Host "Compressing the backup directory using Windows built-in compression"
+        Write-Host "Compressing the backup directory using Windows built-in compression" >> $LOGFILEPATH
         Compress-Archive -Path "$($VaultBackupFolderToZip)" -DestinationPath "$($VaultBackupFolderToZip).zip" -Force
     }
 }
 
 if ($RemoveOldBackups) {
-    Write-Host "Removing backups older than $NUMDAYSBACKUPTOKEEP days to prevent Dropbox space getting eaten up unnecessarily."
+    Write-Host "Removing backups older than $NUMDAYSBACKUPTOKEEP days to prevent Dropbox space getting eaten up unnecessarily." >> $LOGFILEPATH
     Get-ChildItem -Path $VAULTBACKUPPATH -Recurse -File -Include *.* | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays($NUMDAYSBACKUPTOKEEP) } | Remove-Item -Force
 }
-Write-Host "resuming Dropbox, Searchindexer, Everything and Sophos"
+Write-Host "resuming Dropbox, Searchindexer, Everything and Sophos" >> $LOGFILEPATH
 pssuspend -r dropbox
 pssuspend -r searchindexer
 pssuspend -r everything64
 pssuspend -r onedrive
 
 if ($antivirusProcessName) {
-    Write-Host "Antivirus software detected. Resuming $antivirusProcessName using PSSuspend"
+    Write-Host "Antivirus software detected. Resuming $antivirusProcessName using PSSuspend" >> $LOGFILEPATH
     pssuspend.exe -r $antivirusProcessName
 }
 
-Write-Host 'Re-enabling Windows Defender Setting(s) if we modified them'
+Write-Host 'Re-enabling Windows Defender Setting(s) if we modified them' >> $LOGFILEPATH
 if (-not ((Get-MpPreference | Format-List DisableRealtimeMonitoring) -eq 0)) {
     Set-MpPreference -DisableRealtimeMonitoring 0
 }
-Write-host 'Re-enabling Windows Search Service if we disabled it'
+Write-host 'Re-enabling Windows Search Service if we disabled it' >> $LOGFILEPATH
 $SearchService | Set-Service -StartupType Automatic
 $SearchService | Start-Service
 
-Write-Host "Vault backup and zip process complete!"
+Write-Host "Vault backup and zip process complete!" >> $LOGFILEPATH
