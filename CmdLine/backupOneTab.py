@@ -7,7 +7,9 @@ username = os.environ['USERNAME']
 # get the machine name from windows environment variables
 machine_name = os.environ['COMPUTERNAME']
 # C:\Users\alex.fielder\AppData\Local\Microsoft\Edge\User Data\Profile 4\Local Storage\leveldb
-edgedata_path = 'C:/Users/' + username + '/AppData/Local/Microsoft/Edge/User Data/Profile 4/Local Storage/leveldb' # this is your Chrome data path (make sure to replace <Username> with your user's username)
+# leveldb for OneTab installed to Microsoft Edge is actually here:
+#  "C:\Users\alex.fielder\AppData\Local\Microsoft\Edge\User Data\Profile 4\Local Extension Settings\hoimpamkkoehapgenciaoajfkfkpgfop"
+edgedata_path = 'C:/Users/' + username + '/AppData/Local/Microsoft/Edge/User Data/Profile 4/Local Extension Settings/hoimpamkkoehapgenciaoajfkfkpgfop' # this is your Chrome data path (make sure to replace <Username> with your user's username)
 # local_path = C:\Users\alex.fielder\Dropbox\Backups\OneTab
 local_path = 'C:/Users/' + username + '/Dropbox/Backups/OneTab/' + machine_name + '/' # this is your backups folder path (you can change to anywhere but make sure to include the last backslash /)
 
@@ -16,7 +18,7 @@ exclude_file = 'LOCK'
 def backup():
   # get current time
   now = datetime.now() # current date and time
-  date_time = now.strftime('%m-%d-%Y_%H-%M-%S')
+  date_time = now.strftime('%Y-%m-%d_%H-%M-%S')
   print('date and time:', date_time)
 
   # define src directory
