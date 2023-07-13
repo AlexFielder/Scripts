@@ -8,7 +8,7 @@ SET LOGFILEPATH=C:\Users\alex.fielder\Dropbox\ManAndMachine\%computername%_Vault
 REM SET SEVENZIPLOGFILEPATH=F:\Onedrive For Business\OneDrive - GRAITEC\GRA0387AF_Zip_Log.txt
 SET SEVENZIPLOGFILEPATH=C:\Users\alex.fielder\Dropbox\ManAndMachine\AFIELDER-P7760_Zip_Log.txt
 SET SEVENZIPPATH=C:\ProgramData\chocolatey\bin\7z.exe
-SET ADMSCONSOLEPATH=C:\Program Files\Autodesk\Vault Server 2023\ADMS Console\Connectivity.ADMSConsole.exe
+SET ADMSCONSOLEPATH=C:\Program Files\Autodesk\Vault Server 2024\ADMS Console\Connectivity.ADMSConsole.exe
 SET NUMDAYSBACKUPTOKEEP=-60
 SET MINMEMVALUE=2000000
 SET MINDRIVESPACE=10000000
@@ -54,7 +54,7 @@ IF EXIST "%VAULTBACKUPPATH%" (
 	cd %VAULTBACKUPPATH%
 	echo removing existing backup directories if there are any present
 	for /f %%i in ('dir /a:d /b Vault*') do rd /s /q %%i
-	echo performing vault backup from Vault Professional 2023
+	echo performing vault backup from Vault Professional 2024
 	REM -WA is short for Windows Authentication - does not work with Vault basic!
 	REM NO DOMAIN means the -WA option doesn't work.
 	REM call "%ADMSCONSOLEPATH%" -Obackup -B"%VAULTBACKUPPATH%" -WA -VAL -DBSC -S -L"%LOGFILEPATH%"
